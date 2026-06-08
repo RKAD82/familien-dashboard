@@ -1,0 +1,191 @@
+{
+  "sources": [
+    {
+      "name": "Stadt Pulheim Veranstaltungen",
+      "url": "https://www.pulheim.de/",
+      "source_type": "manual-seed",
+      "active": true,
+      "notes": "Live-Abruf erst nach Prüfung der konkreten Quelle und Nutzungsbedingungen."
+    },
+    {
+      "name": "koeln.de Veranstaltungen",
+      "url": "https://www.koeln.de/events/",
+      "source_type": "manual-seed",
+      "active": true,
+      "notes": "Strukturierte Quelle später als RSS/iCal/JSON-LD anbinden, kein Login-Scraping."
+    },
+    {
+      "name": "Caritas Rhein-Erft POGO Kursheft",
+      "url": "https://www.caritas-rhein-erft.de/export/sites/caritas-rheinerft/.content/.galleries/downloads/kinder-jugend-familie/offene-kinder-jugendarbeit/pulheim/260105_Kursheft-1.-Halbjahr_2026.pdf",
+      "source_type": "manual-seed",
+      "active": true,
+      "notes": "Manuell geprüfte Kurse und Ausflüge aus dem Kursheft 1. Halbjahr 2026."
+    },
+    {
+      "name": "Eventim Familienveranstaltungen",
+      "url": "https://www.eventim.de/",
+      "source_type": "manual-seed",
+      "active": true,
+      "notes": "Ticketpreise und Verfügbarkeit können sich ändern und müssen vor Buchung erneut geprüft werden."
+    },
+    {
+      "name": "Kölner Zoo Besuch",
+      "url": "https://koelnerzoo.de/besuch",
+      "source_type": "manual-seed",
+      "active": true,
+      "notes": "Öffnungszeiten und dynamische Eintrittspreise aus der offiziellen Besuchsseite."
+    },
+    {
+      "name": "Kölner Seilbahn",
+      "url": "https://www.koelner-seilbahn.de/german/fahrpreise/tickets.html",
+      "source_type": "manual-seed",
+      "active": true,
+      "notes": "Fahrpreise und Sonderfahrten müssen vor dem Besuch erneut geprüft werden."
+    },
+    {
+      "name": "Rausgegangen Köln",
+      "url": "https://rausgegangen.de/",
+      "source_type": "manual-seed",
+      "active": true,
+      "notes": "Ticket- und Veranstaltungsdaten werden als manuell geprüfte Vorschläge übernommen."
+    }
+  ],
+  "suggestions": [
+    {
+      "external_id": "pogo-kletterwald-bruehl-2026-06-12",
+      "title": "POGO on Tour: Kletterwald Schwindelfrei in Brühl",
+      "description": "Konkreter Ausflug ab Pulheim mit professioneller Einweisung, Kletterparcours und Seilrutschen. Anmeldung über das POGO-Kursheft einplanen.",
+      "starts_at": "2026-06-12T14:00:00.000Z",
+      "ends_at": "2026-06-12T18:30:00.000Z",
+      "location_name": "Kletterwald Schwindelfrei Brühl",
+      "location_address": "Brühl, Treffpunkt laut POGO-Anmeldung",
+      "distance_label": "ca. 30-40 Min.",
+      "category": "Ausflug",
+      "family_score": 94,
+      "price_label": "22 € Teilnahmebeitrag",
+      "age_label": "ab 10 Jahren",
+      "url": "https://www.caritas-rhein-erft.de/export/sites/caritas-rheinerft/.content/.galleries/downloads/kinder-jugend-familie/offene-kinder-jugendarbeit/pulheim/260105_Kursheft-1.-Halbjahr_2026.pdf",
+      "image_url": null,
+      "status": "suggested"
+    },
+    {
+      "external_id": "tobi-krell-tanzbrunnen-2026-06-12",
+      "title": "Tobi Krell: Rätsel, Wissen, Abenteuer",
+      "description": "Große Familienshow am Tanzbrunnen. Als Freitag-Nachmittag-Option sinnvoll, wenn die Tickets noch verfügbar sind.",
+      "starts_at": "2026-06-12T14:00:00.000Z",
+      "ends_at": null,
+      "location_name": "Open Air am Tanzbrunnen Köln",
+      "location_address": "Rheinparkweg 1, 50679 Köln",
+      "distance_label": "ca. 30-45 Min.",
+      "category": "Show",
+      "family_score": 89,
+      "price_label": "Erwachsene ca. 49,25 €, Kinder 3-14 ca. 41,55 €",
+      "age_label": "ab 3 Jahren",
+      "url": "https://www.eventim.de/event/tobi-krell-raetsel-wissen-abenteuer-die-grosse-sommershow-tanzbrunnen-koeln-20633227/",
+      "image_url": null,
+      "status": "suggested"
+    },
+    {
+      "external_id": "familien-schatzsuche-koeln-2026-06-12",
+      "title": "Familienzeit: Schatzsuche in der Kölner Altstadt",
+      "description": "App-basierte Schatzsuche mit Rätseln in der Altstadt. Gut, wenn ihr flexibel starten wollt und ein geladenes Smartphone dabeihabt.",
+      "starts_at": "2026-06-12T07:00:00.000Z",
+      "ends_at": "2026-06-12T21:00:00.000Z",
+      "location_name": "Altstadt Köln",
+      "location_address": "Bahnhofsvorplatz 1, 50667 Köln",
+      "distance_label": "ca. 30-45 Min.",
+      "category": "Outdoor-Rätsel",
+      "family_score": 87,
+      "price_label": "25 € Familienticket",
+      "age_label": "für die ganze Familie",
+      "url": "https://rausgegangen.de/en/events/familienzeit-schatzsuche-fur-die-ganze-familie-in-koln-91/",
+      "image_url": null,
+      "status": "suggested"
+    },
+    {
+      "external_id": "koelner-zoo-samstag-2026-06-13",
+      "title": "Kölner Zoo mit Aquarium und Fütterungen",
+      "description": "Ganzer Tagesausflug mit Zoo, Aquarium, Spielplätzen und optionaler Seilbahn-Anreise. Online-Ticket wegen VRS-Vorteil prüfen.",
+      "starts_at": "2026-06-13T07:00:00.000Z",
+      "ends_at": "2026-06-13T16:00:00.000Z",
+      "location_name": "Kölner Zoo",
+      "location_address": "Riehler Straße 173, 50735 Köln",
+      "distance_label": "ca. 30-40 Min.",
+      "category": "Tagesausflug",
+      "family_score": 86,
+      "price_label": "Online ab 22,50 € Erwachsene, ab 10,50 € Kinder",
+      "age_label": "Kinder bis 12 nur in Begleitung",
+      "url": "https://koelnerzoo.de/besuch",
+      "image_url": null,
+      "status": "suggested"
+    },
+    {
+      "external_id": "lindenthaler-familienfest-2026-06-14",
+      "title": "Lindenthaler Familien- und Veedelsfest",
+      "description": "Sonntagsoption mit kostenfreiem Kinder-Spieleland und Kinder-Rallye. Gut als halber Tag mit Bummeln, Essen und Kinderprogramm.",
+      "starts_at": "2026-06-14T09:00:00.000Z",
+      "ends_at": "2026-06-14T17:00:00.000Z",
+      "location_name": "Karl-Schwering-Platz Köln-Lindenthal",
+      "location_address": "Karl-Schwering-Platz, 50931 Köln",
+      "distance_label": "ca. 25-35 Min.",
+      "category": "Straßenfest",
+      "family_score": 84,
+      "price_label": "Kinder-Spieleland/Rallye kostenfrei, Verzehr extra",
+      "age_label": "familientauglich",
+      "url": "https://www.koeln.de/veranstaltungen/lindenthaler-familien-veedelsfest/",
+      "image_url": null,
+      "status": "suggested"
+    },
+    {
+      "external_id": "philharmonie-veedel-paenz-2026-06-14-11",
+      "title": "PhilharmonieVeedel Pänz: Tanz, tanz, tanz!",
+      "description": "Kurzes Kinderformat im Comedia Theater. Passt als günstige Sonntags-Kulturoption, wenn ein kleineres Zeitfenster besser ist.",
+      "starts_at": "2026-06-14T09:00:00.000Z",
+      "ends_at": null,
+      "location_name": "Comedia Theater Köln",
+      "location_address": "Vondelstraße 4-8, 50677 Köln",
+      "distance_label": "ca. 35-45 Min.",
+      "category": "Kinderkultur",
+      "family_score": 82,
+      "price_label": "4 €",
+      "age_label": "ab 2 Jahren",
+      "url": "https://www.koeln.de/events/kategorie/sonstiges/tag/2026-06-14/",
+      "image_url": null,
+      "status": "suggested"
+    },
+    {
+      "external_id": "pogo-seife-giessen-2026-06-17",
+      "title": "POGO: Seife gießen",
+      "description": "Kreativangebot nach der Schule mit Farben, Düften und eigener Seife zum Mitnehmen. Niedriger Preis, kurzer Termin, lokal gut planbar.",
+      "starts_at": "2026-06-17T14:30:00.000Z",
+      "ends_at": "2026-06-17T16:00:00.000Z",
+      "location_name": "Jugendzentrum POGO Pulheim",
+      "location_address": "Pulheim, genaue Anmeldung laut Kursheft",
+      "distance_label": "nah",
+      "category": "Kreativ",
+      "family_score": 80,
+      "price_label": "4 € Teilnahmebeitrag",
+      "age_label": "ab 8 Jahren",
+      "url": "https://www.caritas-rhein-erft.de/export/sites/caritas-rheinerft/.content/.galleries/downloads/kinder-jugend-familie/offene-kinder-jugendarbeit/pulheim/260105_Kursheft-1.-Halbjahr_2026.pdf",
+      "image_url": null,
+      "status": "suggested"
+    },
+    {
+      "external_id": "koelner-seilbahn-mittsommernacht-2026-06-20",
+      "title": "Kölner Seilbahn: Mittsommernacht-Fahrt",
+      "description": "Abendlicher Kurztrip über den Rhein. Die Sonderfahrt läuft bis spät in die Nacht, daher als spätere Wochenendoption vormerken.",
+      "starts_at": "2026-06-20T16:00:00.000Z",
+      "ends_at": "2026-06-20T22:45:00.000Z",
+      "location_name": "Kölner Seilbahn",
+      "location_address": "Riehler Straße 180, 50735 Köln",
+      "distance_label": "ca. 30-40 Min.",
+      "category": "Kurztrip",
+      "family_score": 78,
+      "price_label": "Hin und zurück: 9,50 € Erwachsene, 4,80 € Kinder",
+      "age_label": "Kinder 4-12 Jahre, unter 4 frei laut Tariflogik prüfen",
+      "url": "https://www.koelner-seilbahn.de/german/fahrpreise/tickets.html",
+      "image_url": null,
+      "status": "suggested"
+    }
+  ]
+}

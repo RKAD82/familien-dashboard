@@ -1,0 +1,435 @@
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
+import { requireSupabase, supabase } from '../lib/supabase'
+import type {
+  ActivitySuggestion,
+  DashboardData,
+  EventItem,
+  Family,
+  FamilyLink,
+  LinkCollection,
+  NoteItem,
+  NotificationDelivery,
+  Recipe,
+  RecipeIngredient,
+  RecipeSuggestion,
+  ShoppingItem,
+  ShoppingList,
+  TaskItem,
+  WasteDistrict,
+  WasteEvent,
+  WasteSortingItem,
+} from '../types'
+
+const emptyData = (family: Family): DashboardData => ({
+  family,
+  memberships: [],
+  events: [],
+  tasks: [],
+  shoppingLists: [],
+  shoppingItems: [],
+  linkCollections: [],
+  links: [],
+  notes: [],
+  wasteDistricts: [],
+  wasteEvents: [],
+  wasteSortingItems: [],
+  recipes: [],
+  recipeIngredients: [],
+  recipeSuggestions: [],
+  activitySuggestions: [],
+  notificationDeliveries: [],
+})
+
+export const useFamilyData = (family: Family | null, userId: string | null) => {
+  const [data, setData] = useState<DashboardData | null>(family ? emptyData(family) : null)
+  const [loading, setLoading] = useState(Boolean(family))
+  const [error, setError] = useState<string | null>(null)
+
+  const familyId = family?.id ?? null
+
+  const loadData = useCallback(async () => {
+    if (!familyId || !family || !supabase) {
+      setData(null)
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    const [
+      memberships,
+      events,
+      tasks,
+      shoppingLists,
+      linkCollections,
+      notes,
+      districts,
+      recipes,
+      recipeSuggestions,
+      activities,
+      deliveries,
+    ] = await Promise.all([
+      supabase.from('family_memberships').select('*').eq('family_id', familyId).eq('active', true),
+      supabase.from('events').select('*').eq('family_id', familyId).order('starts_at'),
+      supabase.from('tasks').select('*').eq('family_id', familyId).order('due_at', { nullsFirst: false }),
+      supabase.from('shopping_lists').select('*').eq('family_id', familyId).eq('archived', false).order('title'),
+      supabase.from('link_collections').select('*').eq('family_id', familyId).order('sort_order'),
+      supabase.from('notes').select('*').eq('family_id', familyId).order('updated_at', { ascending: false }),
+      supabase.from('waste_districts').select('*').eq('active', true),
+      supabase.from('recipes').select('*').eq('family_id', familyId).eq('status', 'active').order('title'),
+      supabase.from('recipe_suggestions').select('*, recipe:recipes(*)').eq('family_id', familyId).order('rank'),
+      supabase.from('activity_suggestions').select('*').eq('family_id', familyId).order('family_score', { ascending: false }),
+      userId
+        ? supabase
+            .from('notification_deliveries')
+            .select('*, notification:notifications(*)')
+            .eq('user_id', userId)
+            .order('sent_at', { ascending: false, nullsFirst: false })
+            .limit(30)
+        : Promise.resolve({ data: [], error: null }),
+    ])
+
+    const firstError = [
+      memberships,
+      events,
+      tasks,
+      shoppingLists,
+      linkCollections,
+      notes,
+      districts,
+      recipes,
+      recipeSuggestions,
+      activities,
+      deliveries,
+    ].find((result) => result.error)
+
+    if (firstError?.error) {
+      setError(firstError.error.message)
+      setLoading(false)
+      return
+    }
+
+    const shoppingListIds = ((shoppingLists.data as ShoppingList[] | null) ?? []).map((list) => list.id)
+    const collectionIds = ((linkCollections.data as LinkCollection[] | null) ?? []).map((collection) => collection.id)
+    const districtIds = ((districts.data as WasteDistrict[] | null) ?? []).map((district) => district.id)
+    const recipeIds = ((recipes.data as Recipe[] | null) ?? []).map((recipe) => recipe.id)
+
+    const [shoppingItems, links, wasteEvents, wasteSortingItems, recipeIngredients] = await Promise.all([
+      shoppingListIds.length
+        ? supabase.from('shopping_items').select('*').in('list_id', shoppingListIds).order('sort_order')
+        : Promise.resolve({ data: [], error: null }),
+      collectionIds.length
+        ? supabase.from('links').select('*').in('collection_id', collectionIds).order('favorite', { ascending: false })
+        : Promise.resolve({ data: [], error: null }),
+      districtIds.length
+        ? supabase.from('waste_events').select('*').in('district_id', districtIds).order('date')
+        : Promise.resolve({ data: [], error: null }),
+      supabase
+        .from('waste_sorting_items')
+        .select('*, category:waste_sorting_categories(name)')
+        .order('term'),
+      recipeIds.length
+        ? supabase.from('recipe_ingredients').select('*').in('recipe_id', recipeIds).order('sort_order')
+        : Promise.resolve({ data: [], error: null }),
+    ])
+
+    const secondError = [shoppingItems, links, wasteEvents, wasteSortingItems, recipeIngredients].find((result) => result.error)
+    if (secondError?.error) {
+      setError(secondError.error.message)
+      setLoading(false)
+      return
+    }
+
+    const normalizedSortingItems =
+      (wasteSortingItems.data as Array<WasteSortingItem & { category?: { name?: string } }> | null)?.map((item) => ({
+        ...item,
+        category_name: item.category?.name ?? item.category_name,
+      })) ?? []
+
+    setData({
+      family,
+      memberships: (memberships.data as DashboardData['memberships'] | null) ?? [],
+      events: (events.data as EventItem[] | null) ?? [],
+      tasks: (tasks.data as TaskItem[] | null) ?? [],
+      shoppingLists: (shoppingLists.data as ShoppingList[] | null) ?? [],
+      shoppingItems: (shoppingItems.data as ShoppingItem[] | null) ?? [],
+      linkCollections: (linkCollections.data as LinkCollection[] | null) ?? [],
+      links: (links.data as FamilyLink[] | null) ?? [],
+      notes: (notes.data as NoteItem[] | null) ?? [],
+      wasteDistricts: (districts.data as WasteDistrict[] | null) ?? [],
+      wasteEvents: (wasteEvents.data as WasteEvent[] | null) ?? [],
+      wasteSortingItems: normalizedSortingItems,
+      recipes: (recipes.data as Recipe[] | null) ?? [],
+      recipeIngredients: (recipeIngredients.data as RecipeIngredient[] | null) ?? [],
+      recipeSuggestions: (recipeSuggestions.data as RecipeSuggestion[] | null) ?? [],
+      activitySuggestions: (activities.data as ActivitySuggestion[] | null) ?? [],
+      notificationDeliveries: (deliveries.data as NotificationDelivery[] | null) ?? [],
+    })
+    setLoading(false)
+  }, [family, familyId, userId])
+
+  useEffect(() => {
+    void loadData()
+  }, [loadData])
+
+  useEffect(() => {
+    if (!supabase || !familyId) {
+      return
+    }
+
+    const client = supabase
+    const channel = client
+      .channel(`family-${familyId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `family_id=eq.${familyId}` }, () => {
+        void loadData()
+      })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'shopping_lists', filter: `family_id=eq.${familyId}` },
+        () => {
+          void loadData()
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notifications', filter: `family_id=eq.${familyId}` },
+        () => {
+          void loadData()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      void client.removeChannel(channel)
+    }
+  }, [familyId, loadData])
+
+  const actions = useMemo(
+    () => ({
+      refresh: loadData,
+      createEvent: async (input: Pick<EventItem, 'title' | 'starts_at' | 'ends_at' | 'all_day' | 'category' | 'location' | 'notes' | 'is_important' | 'notify_family'>) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          return
+        }
+        const { data: event, error: eventError } = await client
+          .from('events')
+          .insert({ ...input, family_id: familyId, created_by: userId })
+          .select()
+          .single()
+
+        if (eventError) {
+          throw eventError
+        }
+
+        if (input.is_important || input.notify_family) {
+          await client.rpc('create_family_notification', {
+            p_family_id: familyId,
+            p_type: 'event',
+            p_title: 'Neuer wichtiger Termin',
+            p_body: input.title,
+            p_target_type: 'event',
+            p_target_id: event.id,
+            p_priority: input.notify_family ? 'urgent' : 'important',
+          })
+        }
+
+        await loadData()
+      },
+      createTask: async (input: Pick<TaskItem, 'title' | 'description' | 'due_at' | 'category' | 'is_important' | 'notify_family'>) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          return
+        }
+        const { data: task, error: taskError } = await client
+          .from('tasks')
+          .insert({ ...input, family_id: familyId, status: input.due_at ? 'today' : 'open', created_by: userId })
+          .select()
+          .single()
+
+        if (taskError) {
+          throw taskError
+        }
+
+        if (input.is_important || input.notify_family) {
+          await client.rpc('create_family_notification', {
+            p_family_id: familyId,
+            p_type: 'task',
+            p_title: 'Neue wichtige Aufgabe',
+            p_body: input.title,
+            p_target_type: 'task',
+            p_target_id: task.id,
+            p_priority: input.notify_family ? 'urgent' : 'important',
+          })
+        }
+
+        await loadData()
+      },
+      updateTaskStatus: async (task: TaskItem, status: TaskItem['status']) => {
+        const client = requireSupabase()
+        const { error: updateError } = await client.from('tasks').update({ status }).eq('id', task.id)
+        if (updateError) {
+          throw updateError
+        }
+        await loadData()
+      },
+      deleteTask: async (task: TaskItem) => {
+        const client = requireSupabase()
+        const { error: deleteError } = await client.from('tasks').delete().eq('id', task.id)
+        if (deleteError) {
+          throw deleteError
+        }
+        await loadData()
+      },
+      addShoppingItem: async (
+        listId: string,
+        input: Pick<ShoppingItem, 'title' | 'quantity' | 'unit' | 'category' | 'source_label'>,
+      ) => {
+        const client = requireSupabase()
+        const { error: insertError } = await client.from('shopping_items').insert({
+          list_id: listId,
+          title: input.title,
+          quantity: input.quantity,
+          unit: input.unit,
+          category: input.category,
+          source_label: input.source_label,
+          checked: false,
+          sort_order: Date.now(),
+          added_by: userId,
+        })
+        if (insertError) {
+          throw insertError
+        }
+        await loadData()
+      },
+      updateShoppingItem: async (
+        item: ShoppingItem,
+        input: Pick<ShoppingItem, 'title' | 'quantity' | 'unit' | 'category' | 'source_label'>,
+      ) => {
+        const client = requireSupabase()
+        const { error: updateError } = await client
+          .from('shopping_items')
+          .update({
+            title: input.title,
+            quantity: input.quantity,
+            unit: input.unit,
+            category: input.category,
+            source_label: input.source_label,
+          })
+          .eq('id', item.id)
+        if (updateError) {
+          throw updateError
+        }
+        await loadData()
+      },
+      toggleShoppingItem: async (item: ShoppingItem) => {
+        const client = requireSupabase()
+        const { error: updateError } = await client
+          .from('shopping_items')
+          .update({ checked: !item.checked, checked_by: !item.checked ? userId : null })
+          .eq('id', item.id)
+        if (updateError) {
+          throw updateError
+        }
+        await loadData()
+      },
+      deleteShoppingItem: async (item: ShoppingItem) => {
+        const client = requireSupabase()
+        const { error: deleteError } = await client.from('shopping_items').delete().eq('id', item.id)
+        if (deleteError) {
+          throw deleteError
+        }
+        await loadData()
+      },
+      clearShoppingList: async (listId: string, checkedOnly: boolean) => {
+        const client = requireSupabase()
+        let query = client.from('shopping_items').delete().eq('list_id', listId)
+        if (checkedOnly) {
+          query = query.eq('checked', true)
+        }
+        const { error: deleteError } = await query
+        if (deleteError) {
+          throw deleteError
+        }
+        await loadData()
+      },
+      createLink: async (
+        input: Pick<FamilyLink, 'collection_id' | 'title' | 'url' | 'description' | 'favorite' | 'is_important' | 'notify_family'>,
+      ) => {
+        const client = requireSupabase()
+        const { error: insertError } = await client.from('links').insert(input)
+        if (insertError) {
+          throw insertError
+        }
+        await loadData()
+      },
+      createNote: async (input: Pick<NoteItem, 'title' | 'body' | 'category' | 'visibility' | 'is_important' | 'notify_family'>) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          return
+        }
+        const { data: note, error: noteError } = await client
+          .from('notes')
+          .insert({ ...input, family_id: familyId, updated_by: userId })
+          .select()
+          .single()
+        if (noteError) {
+          throw noteError
+        }
+        if (input.is_important || input.notify_family) {
+          await client.rpc('create_family_notification', {
+            p_family_id: familyId,
+            p_type: 'note',
+            p_title: 'Neue wichtige Familiennotiz',
+            p_body: input.title,
+            p_target_type: 'note',
+            p_target_id: note.id,
+            p_priority: input.notify_family ? 'urgent' : 'important',
+          })
+        }
+        await loadData()
+      },
+      markNotificationRead: async (delivery: NotificationDelivery) => {
+        const client = requireSupabase()
+        const { error: updateError } = await client
+          .from('notification_deliveries')
+          .update({ status: 'read', read_at: new Date().toISOString() })
+          .eq('id', delivery.id)
+        if (updateError) {
+          throw updateError
+        }
+        await loadData()
+      },
+      addRecipeToShoppingList: async (listId: string, recipeId: string) => {
+        const client = requireSupabase()
+        const recipe = data?.recipes.find((entry) => entry.id === recipeId)
+        const ingredients = data?.recipeIngredients.filter((ingredient) => ingredient.recipe_id === recipeId) ?? []
+        const payload = ingredients
+          .filter((ingredient) => !ingredient.optional)
+          .map((ingredient, index) => ({
+            list_id: listId,
+            title: ingredient.name,
+            quantity: ingredient.quantity,
+            unit: ingredient.unit,
+            category: ingredient.shopping_category,
+            source_label: recipe ? `Zutaten für ${recipe.title}` : 'Rezeptzutaten',
+            checked: false,
+            sort_order: Date.now() + index,
+            added_by: userId,
+          }))
+        if (!payload.length) {
+          return
+        }
+        const { error: insertError } = await client.from('shopping_items').insert(payload)
+        if (insertError) {
+          throw insertError
+        }
+        await loadData()
+      },
+    }),
+    [data?.recipeIngredients, data?.recipes, familyId, loadData, userId],
+  )
+
+  return { data, loading, error, actions }
+}

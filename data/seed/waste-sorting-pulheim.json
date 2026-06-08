@@ -1,0 +1,130 @@
+{
+  "categories": [
+    {
+      "name": "Graue Tonne",
+      "color_token": "waste-gray",
+      "description": "Restabfall, der nicht verwertbar ist."
+    },
+    {
+      "name": "Gelbe Tonne",
+      "color_token": "waste-yellow",
+      "description": "Leichtverpackungen aus Kunststoff, Metall und Verbundstoffen."
+    },
+    {
+      "name": "Blaue Tonne",
+      "color_token": "waste-blue",
+      "description": "Papier, Pappe und Kartonagen."
+    },
+    {
+      "name": "Biotonne",
+      "color_token": "waste-green",
+      "description": "Organische Küchen- und Gartenabfälle."
+    },
+    {
+      "name": "Wertstoffhof/Sonderabgabe",
+      "color_token": "waste-special",
+      "description": "Stoffe, die nicht in die Haushaltsabholung gehören."
+    }
+  ],
+  "items": [
+    {
+      "term": "Katzenstreu",
+      "aliases": ["katzenklo", "streu"],
+      "category_name": "Graue Tonne",
+      "description": "Benutztes Katzenstreu gehÖrt in den Restabfall.",
+      "allowed": true,
+      "warning": "Nicht in die Biotonne geben.",
+      "source_note": "Trennhilfe-Seed für MVP, vor Produktivbetrieb gegen Original prüfen."
+    },
+    {
+      "term": "Joghurtbecher",
+      "aliases": ["plastikbecher", "becher"],
+      "category_name": "Gelbe Tonne",
+      "description": "Leere Verkaufsverpackung aus Kunststoff.",
+      "allowed": true,
+      "warning": "Becher leer machen, Deckel nach Material getrennt einwerfen.",
+      "source_note": "Trennhilfe-Seed für MVP."
+    },
+    {
+      "term": "Pizzakarton sauber",
+      "aliases": ["pizzakarton", "karton"],
+      "category_name": "Blaue Tonne",
+      "description": "Saubere Kartonage ohne starke Fett- oder Essensreste.",
+      "allowed": true,
+      "warning": "Stark verschmutzte Kartons gehören in den Restabfall.",
+      "source_note": "Trennhilfe-Seed für MVP."
+    },
+    {
+      "term": "Bananenschale",
+      "aliases": ["obstschale", "bioabfall"],
+      "category_name": "Biotonne",
+      "description": "Obst- und Gemüseabfall.",
+      "allowed": true,
+      "warning": null,
+      "source_note": "Trennhilfe-Seed für MVP."
+    },
+    {
+      "term": "Batterien",
+      "aliases": ["akku", "akkus", "knopfzelle"],
+      "category_name": "Wertstoffhof/Sonderabgabe",
+      "description": "Batterien und Akkus separat zur Sammelstelle bringen.",
+      "allowed": true,
+      "warning": "Brandgefahr. Nicht in Restabfall oder Gelbe Tonne werfen.",
+      "source_note": "Trennhilfe-Seed für MVP."
+    },
+    {
+      "term": "Farbeimer mit Resten",
+      "aliases": ["lack", "farbe", "wandfarbe"],
+      "category_name": "Wertstoffhof/Sonderabgabe",
+      "description": "Flüssige oder schadstoffhaltige Reste über Schadstoffmobil/Wertstoffhof entsorgen.",
+      "allowed": true,
+      "warning": "Nicht in den Ausguss kippen.",
+      "source_note": "Trennhilfe-Seed für MVP."
+    },
+    {
+      "term": "Windeln",
+      "aliases": ["babywindel"],
+      "category_name": "Graue Tonne",
+      "description": "Hygieneabfall gehÖrt in den Restabfall.",
+      "allowed": true,
+      "warning": null,
+      "source_note": "Trennhilfe-Seed für MVP."
+    },
+    {
+      "term": "Zeitung",
+      "aliases": ["papier", "zeitschrift"],
+      "category_name": "Blaue Tonne",
+      "description": "Papier ohne Beschichtung oder Verschmutzung.",
+      "allowed": true,
+      "warning": null,
+      "source_note": "Trennhilfe-Seed für MVP."
+    },
+    {
+      "term": "Kaffeefilter",
+      "aliases": ["kaffeesatz"],
+      "category_name": "Biotonne",
+      "description": "Kaffeesatz und Papierfilter sind Bioabfall.",
+      "allowed": true,
+      "warning": null,
+      "source_note": "Trennhilfe-Seed für MVP."
+    },
+    {
+      "term": "Styroporverpackung",
+      "aliases": ["styropor", "eps"],
+      "category_name": "Gelbe Tonne",
+      "description": "Verkaufsverpackung aus Styropor.",
+      "allowed": true,
+      "warning": "Baustellen-Styropor ist kein Verpackungsabfall und muss getrennt geprüft werden.",
+      "source_note": "Trennhilfe-Seed für MVP."
+    }
+  ],
+  "locations": [
+    {
+      "type": "wertstoffhof",
+      "name": "Wertstoffhof Pulheim",
+      "address": "Vor Produktivbetrieb gegen aktuelle Stadtangaben prüfen",
+      "opening_times": "Nicht im MVP als verbindliche Angabe hinterlegt",
+      "notes": "Kontakt- und Öffnungszeiten müssen vor Nutzung aktuell geprüft werden."
+    }
+  ]
+}

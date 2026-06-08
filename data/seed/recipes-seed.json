@@ -1,0 +1,100 @@
+{
+  "recipes": [
+    {
+      "title": "Ofengemüse mit Kräuterquark",
+      "description": "Einfaches Blechgericht für die Woche.",
+      "is_vegetarian": true,
+      "difficulty": "leicht",
+      "prep_minutes": 15,
+      "cook_minutes": 30,
+      "servings": 4,
+      "tags": ["vegetarisch", "schnell", "familie"],
+      "ingredients": [
+        { "name": "Kartoffeln", "quantity": "900", "unit": "g", "shopping_category": "Gemüse" },
+        { "name": "Möhren", "quantity": "500", "unit": "g", "shopping_category": "Gemüse" },
+        { "name": "Paprika", "quantity": "3", "unit": "Stk", "shopping_category": "Gemüse" },
+        { "name": "Quark", "quantity": "500", "unit": "g", "shopping_category": "Kühlregal" }
+      ]
+    },
+    {
+      "title": "Pasta mit Tomaten-Linsen-Sauce",
+      "description": "Vegetarische Sauce mit roten Linsen.",
+      "is_vegetarian": true,
+      "difficulty": "leicht",
+      "prep_minutes": 10,
+      "cook_minutes": 25,
+      "servings": 4,
+      "tags": ["vegetarisch", "pasta", "vorrat"],
+      "ingredients": [
+        { "name": "Pasta", "quantity": "500", "unit": "g", "shopping_category": "Vorrat" },
+        { "name": "Rote Linsen", "quantity": "200", "unit": "g", "shopping_category": "Vorrat" },
+        { "name": "Passierte Tomaten", "quantity": "700", "unit": "ml", "shopping_category": "Vorrat" },
+        { "name": "Parmesan", "quantity": "80", "unit": "g", "shopping_category": "Kühlregal" }
+      ]
+    },
+    {
+      "title": "Hähnchen-Reis-Pfanne",
+      "description": "Pfannengericht mit Gemüse und Reis.",
+      "is_vegetarian": false,
+      "difficulty": "mittel",
+      "prep_minutes": 20,
+      "cook_minutes": 25,
+      "servings": 4,
+      "tags": ["pfanne", "sattmacher"],
+      "ingredients": [
+        { "name": "Hähnchenbrust", "quantity": "600", "unit": "g", "shopping_category": "Fleisch" },
+        { "name": "Reis", "quantity": "300", "unit": "g", "shopping_category": "Vorrat" },
+        { "name": "Erbsen", "quantity": "250", "unit": "g", "shopping_category": "Tiefkuehl" },
+        { "name": "Möhren", "quantity": "300", "unit": "g", "shopping_category": "Gemüse" }
+      ]
+    },
+    {
+      "title": "Kartoffelsuppe",
+      "description": "Wärmende Suppe, gut vorzubereiten.",
+      "is_vegetarian": true,
+      "difficulty": "leicht",
+      "prep_minutes": 15,
+      "cook_minutes": 35,
+      "servings": 4,
+      "tags": ["vegetarisch", "suppe", "mealprep"],
+      "ingredients": [
+        { "name": "Kartoffeln", "quantity": "1", "unit": "kg", "shopping_category": "Gemüse" },
+        { "name": "Lauch", "quantity": "2", "unit": "Stangen", "shopping_category": "Gemüse" },
+        { "name": "Möhren", "quantity": "300", "unit": "g", "shopping_category": "Gemüse" },
+        { "name": "Sahne", "quantity": "200", "unit": "ml", "shopping_category": "Kühlregal" }
+      ]
+    },
+    {
+      "title": "Fischstäbchen mit Kartoffelpüree",
+      "description": "Schnelles Familienessen.",
+      "is_vegetarian": false,
+      "difficulty": "leicht",
+      "prep_minutes": 10,
+      "cook_minutes": 25,
+      "servings": 4,
+      "tags": ["schnell", "kinder"],
+      "ingredients": [
+        { "name": "Fischstäbchen", "quantity": "12", "unit": "Stk", "shopping_category": "Tiefkühl" },
+        { "name": "Kartoffeln", "quantity": "1", "unit": "kg", "shopping_category": "Gemüse" },
+        { "name": "Milch", "quantity": "250", "unit": "ml", "shopping_category": "Kühlregal" },
+        { "name": "Gurke", "quantity": "1", "unit": "Stk", "shopping_category": "Gemüse" }
+      ]
+    },
+    {
+      "title": "Wraps mit Bohnen und Salat",
+      "description": "Baukastenessen für den Tisch.",
+      "is_vegetarian": true,
+      "difficulty": "leicht",
+      "prep_minutes": 20,
+      "cook_minutes": 10,
+      "servings": 4,
+      "tags": ["vegetarisch", "baukasten", "schnell"],
+      "ingredients": [
+        { "name": "Wraps", "quantity": "8", "unit": "Stk", "shopping_category": "Brot" },
+        { "name": "Kidneybohnen", "quantity": "2", "unit": "Dosen", "shopping_category": "Vorrat" },
+        { "name": "Salat", "quantity": "1", "unit": "Kopf", "shopping_category": "Gemüse" },
+        { "name": "Joghurt", "quantity": "250", "unit": "g", "shopping_category": "Kühlregal" }
+      ]
+    }
+  ]
+}

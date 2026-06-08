@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Familien-Dashboard">
+  <rect width="512" height="512" rx="108" fill="#345c52"/>
+  <path d="M116 273 256 136l140 137v118a34 34 0 0 1-34 34H150a34 34 0 0 1-34-34Z" fill="#f7f5ef"/>
+  <path d="M188 425V296h136v129" fill="#c76f4a"/>
+  <circle cx="256" cy="242" r="42" fill="#e1b75d"/>
+</svg>
