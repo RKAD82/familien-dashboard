@@ -1,6 +1,6 @@
 ﻿import type { Session, User } from '@supabase/supabase-js'
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { hasSupabaseConfig } from '../config'
+import { hasSupabaseConfig, publicBasePath } from '../config'
 import { supabase } from '../lib/supabase'
 import type { FamilyMembership, Profile } from '../types'
 
@@ -12,8 +12,11 @@ interface AuthState {
   memberships: FamilyMembership[]
   loading: boolean
   configured: boolean
+  passwordRecovery: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
+  resetPasswordForEmail: (email: string) => Promise<void>
+  updatePassword: (password: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthState | null>(null)
@@ -23,6 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [memberships, setMemberships] = useState<FamilyMembership[]>([])
   const [loading, setLoading] = useState(true)
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
 
   useEffect(() => {
     if (!supabase) {
@@ -43,7 +47,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }
 
-    const { data: authListener } = client.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: authListener } = client.auth.onAuthStateChange((event, nextSession) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setPasswordRecovery(true)
+      }
+      if (event === 'SIGNED_OUT') {
+        setPasswordRecovery(false)
+      }
       setSession(nextSession)
     })
 
@@ -104,6 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       memberships,
       loading,
       configured: hasSupabaseConfig,
+      passwordRecovery,
       signIn: async (email: string, password: string) => {
         if (!supabase) {
           throw new Error('Supabase ist nicht konfiguriert.')
@@ -120,8 +131,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         await supabase.auth.signOut()
       },
+      resetPasswordForEmail: async (email: string) => {
+        if (!supabase) {
+          throw new Error('Supabase ist nicht konfiguriert.')
+        }
+
+        const redirectTo =
+          typeof window !== 'undefined' ? new URL(publicBasePath, window.location.origin).toString() : undefined
+        const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+        if (error) {
+          throw error
+        }
+      },
+      updatePassword: async (password: string) => {
+        if (!supabase) {
+          throw new Error('Supabase ist nicht konfiguriert.')
+        }
+
+        const { error } = await supabase.auth.updateUser({ password })
+        if (error) {
+          throw error
+        }
+        setPasswordRecovery(false)
+      },
     }),
-    [loading, memberships, profile, session],
+    [loading, memberships, passwordRecovery, profile, session],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

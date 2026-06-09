@@ -77,6 +77,12 @@ VITE_VAPID_PUBLIC_KEY
 
 Für den ersten Onlinebetrieb reicht `VITE_VAPID_PUBLIC_KEY` leer oder als Platzhalter, solange Web Push noch nicht produktiv genutzt wird.
 
+Vor jedem Upload lokal prüfen:
+
+```powershell
+npm.cmd run check
+```
+
 Dann:
 
 1. Repository nach GitHub pushen.
@@ -84,8 +90,27 @@ Dann:
 3. Workflow `Deploy Familien-Dashboard` ausführen oder auf `main` pushen.
 4. Die App ist danach unter der GitHub-Pages-Adresse erreichbar.
 
-## 5. Was noch nicht automatisch erledigt ist
+## 5. Supabase Edge Functions
+
+Für Einladungen weiterer Familienmitglieder ist vorbereitet:
+
+```text
+supabase/functions/invite-family-member/index.ts
+```
+
+Diese Funktion muss in Supabase als Edge Function deployed werden. Sie benötigt:
+
+```text
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+```
+
+Der `service_role key` bleibt ausschließlich in Supabase/Edge-Function-Secrets. Er gehört nicht in GitHub Pages und nicht in das Frontend.
+
+Die Funktion verschickt eine Supabase-Auth-Einladung und legt Profil sowie Familienmitgliedschaft an, wenn der aufrufende Nutzer Admin der Familie ist.
+
+## 6. Was noch nicht automatisch erledigt ist
 
 - Ich kann den echten Online-Deploy in dieser Sitzung nicht durchführen, weil dafür GitHub- und Supabase-Zugriffsdaten sowie Netzwerk-/Push-Rechte nötig sind.
-- Weitere Familienmitglieder müssen aktuell über Supabase Auth oder ein erweitertes Seed-/Einladungswerkzeug angelegt werden.
+- Die Edge Function `invite-family-member` muss separat in Supabase deployed werden, bevor die Einladungsmaske produktiv funktioniert.
 - Web Push auf iPhone/iPad funktioniert erst nach HTTPS-Deploy und Installation der PWA auf den Home-Bildschirm.

@@ -1,5 +1,14 @@
 import { useOutletContext } from 'react-router-dom'
-import type { DashboardData, EventItem, FamilyLink, NoteItem, NotificationDelivery, ShoppingItem, TaskItem } from '../types'
+import type {
+  DashboardData,
+  EventItem,
+  FamilyLink,
+  NoteItem,
+  NotificationDelivery,
+  Role,
+  ShoppingItem,
+  TaskItem,
+} from '../types'
 
 export type CreateEventInput = Pick<
   EventItem,
@@ -12,6 +21,12 @@ export type CreateLinkInput = Pick<
   FamilyLink,
   'collection_id' | 'title' | 'url' | 'description' | 'favorite' | 'is_important' | 'notify_family'
 >
+
+export interface InviteFamilyMemberInput {
+  email: string
+  display_name: string
+  role: Role
+}
 
 export interface FamilyActions {
   refresh: () => Promise<void>
@@ -33,6 +48,7 @@ export interface FamilyActions {
   ) => Promise<void>
   markNotificationRead: (delivery: NotificationDelivery) => Promise<void>
   addRecipeToShoppingList: (listId: string, recipeId: string) => Promise<void>
+  inviteFamilyMember?: (input: InviteFamilyMemberInput) => Promise<void>
 }
 
 export interface FamilyRouteContext {

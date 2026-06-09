@@ -93,6 +93,22 @@ Plattformgrenze:
 - Lokale iOS-Zustellung ist nicht belastbar testbar.
 - In-App-Benachrichtigungen bleiben der verbindliche Fallback.
 
+## Nutzerverwaltung
+
+Die App unterstützt:
+
+- Login über Supabase Auth
+- Passwort-Reset per E-Mail über `resetPasswordForEmail`
+- Passwortänderung für angemeldete Nutzer
+- Einladungen weiterer Familienmitglieder über die Edge Function `invite-family-member`
+
+Die Einladung läuft bewusst nicht direkt im Browser, weil dafür Admin-Rechte in Supabase Auth nötig sind. Für die Edge Function müssen in Supabase gesetzt sein:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY` oder `SUPABASE_SECRET_KEYS`
+
+Die Funktion prüft, ob der aufrufende Nutzer Admin der Familie ist, bevor sie eine Einladung verschickt und Profil plus Familienmitgliedschaft vorbereitet.
+
 ## Tests
 
 ```powershell
@@ -100,6 +116,7 @@ npm run lint
 npm run typecheck
 npm run test
 npm run build
+npm run check
 ```
 
 Getestete Kernlogik:

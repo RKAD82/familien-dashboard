@@ -1,4 +1,5 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from 'react'
+import { publicBasePath } from '../config'
 import { requireSupabase, supabase } from '../lib/supabase'
 import type {
   ActivitySuggestion,
@@ -12,6 +13,7 @@ import type {
   Recipe,
   RecipeIngredient,
   RecipeSuggestion,
+  Role,
   ShoppingItem,
   ShoppingList,
   TaskItem,
@@ -424,6 +426,28 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         const { error: insertError } = await client.from('shopping_items').insert(payload)
         if (insertError) {
           throw insertError
+        }
+        await loadData()
+      },
+      inviteFamilyMember: async (input: { email: string; display_name: string; role: Role }) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          return
+        }
+
+        const redirectTo =
+          typeof window !== 'undefined' ? new URL(publicBasePath, window.location.origin).toString() : undefined
+        const { error: inviteError } = await client.functions.invoke('invite-family-member', {
+          body: {
+            family_id: familyId,
+            email: input.email,
+            display_name: input.display_name,
+            role: input.role,
+            redirect_to: redirectTo,
+          },
+        })
+        if (inviteError) {
+          throw inviteError
         }
         await loadData()
       },
