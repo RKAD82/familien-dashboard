@@ -1,6 +1,6 @@
 import { Bell, CalendarDays, ChevronDown, CloudSun, LogOut, Menu, Plus, Search, UserRound, X } from 'lucide-react'
 import { useEffect, useState, type CSSProperties } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { addDays, formatDay, startOfWeek, toDateKey } from '../lib/date'
 import { isNavItemVisible, mobileNavItemIds, navigationItems } from '../navigation'
 import { useAuth } from '../hooks/useAuth'
@@ -106,8 +106,10 @@ const PhotoAvatar = ({ member, large = false }: { member?: FamilyMembership | nu
 }
 
 const WeekRail = () => {
+  const location = useLocation()
   const start = startOfWeek()
   const today = toDateKey(new Date())
+  const selectedDay = new URLSearchParams(location.search).get('tag') ?? today
   const days = Array.from({ length: 7 }, (_, index) => addDays(start, index))
 
   return (
@@ -128,7 +130,11 @@ const WeekRail = () => {
           const key = toDateKey(day)
           const [weekday, date] = formatDay(day).split(', ')
           return (
-            <NavLink key={key} to="/woche" className={key === today ? 'today' : ''}>
+            <NavLink
+              key={key}
+              to={`/woche?tag=${key}`}
+              className={`${key === today ? 'today' : ''} ${key === selectedDay ? 'selected' : ''}`}
+            >
               <span>{weekday}</span>
               <strong>{date?.slice(0, 2) ?? day.getDate()}</strong>
               <small>{date?.slice(3) ?? ''}</small>
@@ -168,7 +174,7 @@ export const AppShell = ({
           <PhotoAvatar member={currentMembership} large />
           <div>
             <strong>Familien-Dashboard</strong>
-            <span>{data.family.name}</span>
+            <span>{currentMembership ? `${currentMembership.display_name} · ${currentMembership.email ?? data.family.name}` : data.family.name}</span>
           </div>
           <ChevronDown size={16} />
         </div>
@@ -229,6 +235,12 @@ export const AppShell = ({
             {unread > 0 && <em>{unread}</em>}
           </NavLink>
           <PhotoAvatar member={currentMembership} />
+          {currentMembership && (
+            <div className="topline-user">
+              <strong>{currentMembership.display_name}</strong>
+              <span>{currentMembership.role === 'admin' ? 'Admin' : currentMembership.email ?? 'angemeldet'}</span>
+            </div>
+          )}
         </div>
         <WeekRail />
         <Outlet context={{ data, actions }} />

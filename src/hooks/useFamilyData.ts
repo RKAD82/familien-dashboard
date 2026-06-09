@@ -81,7 +81,7 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       activities,
       deliveries,
     ] = await Promise.all([
-      supabase.from('family_memberships').select('*').eq('family_id', familyId).eq('active', true),
+      supabase.from('family_memberships').select('*, profile:profiles(email)').eq('family_id', familyId),
       supabase.from('events').select('*').eq('family_id', familyId).order('starts_at'),
       supabase.from('tasks').select('*').eq('family_id', familyId).order('due_at', { nullsFirst: false }),
       supabase.from('shopping_lists').select('*').eq('family_id', familyId).eq('archived', false).order('title'),
@@ -164,7 +164,14 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
 
     setData({
       family,
-      memberships: (memberships.data as DashboardData['memberships'] | null) ?? [],
+      memberships: (
+        ((memberships.data as (DashboardData['memberships'][number] & { profile?: { email?: string | null } })[] | null) ?? []).map(
+          ({ profile, ...member }) => ({
+            ...member,
+            email: profile?.email ?? null,
+          }),
+        )
+      ),
       events: (events.data as EventItem[] | null) ?? [],
       tasks: (tasks.data as TaskItem[] | null) ?? [],
       shoppingLists: (shoppingLists.data as ShoppingList[] | null) ?? [],
@@ -429,7 +436,7 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       createEmergencyItem: async (
         input: Pick<
           EmergencyItem,
-          'type' | 'title' | 'primary_text' | 'secondary_text' | 'phone' | 'address' | 'notes' | 'priority'
+          'type' | 'title' | 'primary_text' | 'secondary_text' | 'phone' | 'address' | 'url' | 'notes' | 'priority'
         >,
       ) => {
         const client = requireSupabase()
@@ -523,6 +530,38 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
           throw updateError
         }
         await loadData()
+      },
+      updateFamilyMember: async (
+        memberUserId: string,
+        input: { display_name: string; role: Role; active: boolean; visible_nav_items: string[] },
+      ) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          return
+        }
+        const { error: updateError } = await client
+          .from('family_memberships')
+          .update({
+            display_name: input.display_name,
+            role: input.role,
+            active: input.active,
+            visible_nav_items: input.visible_nav_items,
+          })
+          .eq('family_id', familyId)
+          .eq('user_id', memberUserId)
+        if (updateError) {
+          throw updateError
+        }
+        await loadData()
+      },
+      sendPasswordReset: async (email: string) => {
+        const client = requireSupabase()
+        const redirectTo =
+          typeof window !== 'undefined' ? new URL(publicBasePath, window.location.origin).toString() : undefined
+        const { error: resetError } = await client.auth.resetPasswordForEmail(email, { redirectTo })
+        if (resetError) {
+          throw resetError
+        }
       },
       inviteFamilyMember: async (input: { email: string; display_name: string; role: Role }) => {
         const client = requireSupabase()

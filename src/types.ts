@@ -52,6 +52,7 @@ export interface FamilyMembership {
   active: boolean
   notification_preferences?: Record<string, unknown>
   visible_nav_items?: NavItemId[] | null
+  email?: string | null
   family?: Family
 }
 
@@ -156,7 +157,7 @@ export interface FamilyContact {
   updated_at?: string
 }
 
-export type EmergencyItemType = 'contact' | 'address' | 'medical' | 'info'
+export type EmergencyItemType = 'contact' | 'address' | 'medical' | 'info' | 'link'
 
 export interface EmergencyItem {
   id: string
@@ -167,6 +168,7 @@ export interface EmergencyItem {
   secondary_text: string | null
   phone: string | null
   address: string | null
+  url: string | null
   notes: string | null
   priority: number
   created_by: string | null

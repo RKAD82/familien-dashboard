@@ -41,7 +41,7 @@ export type CreateFamilyContactInput = Pick<
 
 export type CreateEmergencyItemInput = Pick<
   EmergencyItem,
-  'type' | 'title' | 'primary_text' | 'secondary_text' | 'phone' | 'address' | 'notes' | 'priority'
+  'type' | 'title' | 'primary_text' | 'secondary_text' | 'phone' | 'address' | 'url' | 'notes' | 'priority'
 >
 
 export interface InviteFamilyMemberInput {
@@ -73,6 +73,11 @@ export interface FamilyActions {
   markNotificationRead: (delivery: NotificationDelivery) => Promise<void>
   addRecipeToShoppingList: (listId: string, recipeId: string) => Promise<void>
   updateMembershipNavigation?: (userId: string, visibleNavItems: NavItemId[]) => Promise<void>
+  updateFamilyMember?: (
+    userId: string,
+    input: { display_name: string; role: Role; active: boolean; visible_nav_items: NavItemId[] },
+  ) => Promise<void>
+  sendPasswordReset?: (email: string) => Promise<void>
   inviteFamilyMember?: (input: InviteFamilyMemberInput) => Promise<void>
 }
 

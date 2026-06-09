@@ -1,4 +1,4 @@
-import { AlertTriangle, HeartPulse, MapPin, Phone, Plus, ShieldAlert } from 'lucide-react'
+import { AlertTriangle, ExternalLink, HeartPulse, Link as LinkIcon, MapPin, Phone, Plus, ShieldAlert } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useFamilyRoute } from '../routes/context'
 import type { EmergencyItemType } from '../types'
@@ -9,6 +9,7 @@ const typeLabels: Record<EmergencyItemType, string> = {
   address: 'Notfalladresse',
   medical: 'Medizinisch',
   info: 'Hinweis',
+  link: 'Wichtiger Link',
 }
 
 const typeIcons: Record<EmergencyItemType, typeof ShieldAlert> = {
@@ -16,6 +17,7 @@ const typeIcons: Record<EmergencyItemType, typeof ShieldAlert> = {
   address: MapPin,
   medical: HeartPulse,
   info: AlertTriangle,
+  link: LinkIcon,
 }
 
 export const EmergencyPage = () => {
@@ -26,6 +28,7 @@ export const EmergencyPage = () => {
   const [secondaryText, setSecondaryText] = useState('')
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
+  const [url, setUrl] = useState('')
   const [notes, setNotes] = useState('')
   const [priority, setPriority] = useState(1)
   const [error, setError] = useState<string | null>(null)
@@ -48,6 +51,7 @@ export const EmergencyPage = () => {
         secondary_text: secondaryText.trim() || null,
         phone: phone.trim() || null,
         address: address.trim() || null,
+        url: url.trim() || null,
         notes: notes.trim() || null,
         priority,
       })
@@ -57,6 +61,7 @@ export const EmergencyPage = () => {
       setSecondaryText('')
       setPhone('')
       setAddress('')
+      setUrl('')
       setNotes('')
       setPriority(1)
     } catch (submitError) {
@@ -88,7 +93,7 @@ export const EmergencyPage = () => {
             <TextInput value={title} onChange={(event) => setTitle(event.target.value)} />
           </Field>
           <Field label="Hauptinformation">
-            <TextInput placeholder="z.B. Name, Nummer oder Adresse" value={primaryText} onChange={(event) => setPrimaryText(event.target.value)} />
+            <TextInput placeholder="z.B. Name, Nummer, Adresse oder Webseitenname" value={primaryText} onChange={(event) => setPrimaryText(event.target.value)} />
           </Field>
           <Field label="Zusatz">
             <TextInput value={secondaryText} onChange={(event) => setSecondaryText(event.target.value)} />
@@ -109,6 +114,9 @@ export const EmergencyPage = () => {
           </div>
           <Field label="Adresse">
             <TextArea rows={3} value={address} onChange={(event) => setAddress(event.target.value)} />
+          </Field>
+          <Field label="Link">
+            <TextInput placeholder="https://..." type="url" value={url} onChange={(event) => setUrl(event.target.value)} />
           </Field>
           <Field label="Bemerkungen">
             <TextArea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} />
@@ -145,6 +153,12 @@ export const EmergencyPage = () => {
                       </a>
                     )}
                     {item.address && <small>{item.address}</small>}
+                    {item.url && (
+                      <a href={item.url} target="_blank" rel="noreferrer">
+                        <ExternalLink size={16} />
+                        Link öffnen
+                      </a>
+                    )}
                     {item.notes && <small>{item.notes}</small>}
                   </div>
                 </article>

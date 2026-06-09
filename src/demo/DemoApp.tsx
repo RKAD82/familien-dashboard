@@ -202,6 +202,7 @@ export const DemoApp = () => {
               secondary_text: input.secondary_text,
               phone: input.phone,
               address: input.address,
+              url: input.url,
               notes: input.notes,
               priority: input.priority,
               created_by: 'demo-user',

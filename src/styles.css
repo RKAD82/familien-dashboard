@@ -1621,6 +1621,15 @@ code {
   box-shadow: 0 14px 30px rgb(215 137 127 / 24%);
 }
 
+.week-rail-days a.selected {
+  outline: 2px solid #6398a9;
+  outline-offset: 2px;
+}
+
+.week-rail-days a.today.selected {
+  outline-color: #1f2d25;
+}
+
 .week-rail-days span,
 .week-rail-days small {
   color: inherit;
@@ -1632,6 +1641,23 @@ code {
 
 .week-rail-days strong {
   font-size: 1.35rem;
+}
+
+.topline-user {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.topline-user strong {
+  font-size: 0.82rem;
+  line-height: 1.1;
+}
+
+.topline-user span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.1;
 }
 
 .page-grid,
@@ -1814,6 +1840,12 @@ code {
   gap: 0.85rem;
 }
 
+.member-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 0.85rem;
+}
+
 .visibility-grid article {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -1821,6 +1853,53 @@ code {
   display: grid;
   gap: 0.75rem;
   padding: 0.9rem;
+}
+
+.member-admin-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.9rem;
+}
+
+.member-admin-card.is-inactive {
+  opacity: 0.72;
+}
+
+.member-admin-header,
+.member-admin-actions,
+.member-active-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.member-admin-header {
+  justify-content: space-between;
+}
+
+.member-admin-header div {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.member-admin-header span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.member-active-toggle {
+  min-height: 34px;
+  color: var(--text-soft);
+  font-weight: 760;
+}
+
+.member-admin-actions {
+  flex-wrap: wrap;
 }
 
 .visibility-options {
@@ -2074,6 +2153,7 @@ code {
   .contact-grid,
   .emergency-grid,
   .visibility-grid,
+  .member-admin-grid,
   .year-grid {
     grid-template-columns: 1fr;
   }

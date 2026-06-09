@@ -1,11 +1,11 @@
-import { Database, GitBranch, KeyRound, Send, ShieldCheck, SlidersHorizontal, UserPlus } from 'lucide-react'
-import { useMemo, useState, type FormEvent } from 'react'
+import { Database, GitBranch, KeyRound, Mail, Save, Send, ShieldCheck, UserCheck, UserPlus } from 'lucide-react'
+import { useState, type FormEvent } from 'react'
 import { Button, Card, Field, Select, Tag, TextInput } from '../components/ui'
 import { appConfig } from '../config'
 import { useAuth } from '../hooks/useAuth'
-import { defaultVisibleNavItemIds, navigationItems, visibleNavIdsForMembership } from '../navigation'
+import { navigationItems, visibleNavIdsForMembership } from '../navigation'
 import { useFamilyRoute } from '../routes/context'
-import type { NavItemId, Role } from '../types'
+import type { FamilyMembership, NavItemId, Role } from '../types'
 
 const roleLabel: Record<Role, string> = {
   admin: 'Admin',
@@ -14,6 +14,154 @@ const roleLabel: Record<Role, string> = {
 }
 
 const uniqueNavItems = (ids: NavItemId[]) => navigationItems.filter((item) => ids.includes(item.id)).map((item) => item.id)
+
+const MemberAdminCard = ({
+  canManage,
+  currentUserId,
+  member,
+  onReset,
+  onSave,
+}: {
+  canManage: boolean
+  currentUserId?: string
+  member: FamilyMembership
+  onReset: (member: FamilyMembership) => Promise<void>
+  onSave: (
+    member: FamilyMembership,
+    input: { display_name: string; role: Role; active: boolean; visible_nav_items: NavItemId[] },
+  ) => Promise<void>
+}) => {
+  const [displayName, setDisplayName] = useState(member.display_name)
+  const [role, setRole] = useState<Role>(member.role)
+  const [active, setActive] = useState(member.active)
+  const [visible, setVisible] = useState(() => new Set(visibleNavIdsForMembership(member)))
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const isCurrentUser = currentUserId === member.user_id
+
+  const toggleNav = (navId: NavItemId, checked: boolean) => {
+    setVisible((current) => {
+      const next = new Set(current)
+      if (checked) {
+        next.add(navId)
+      } else {
+        next.delete(navId)
+      }
+      if (role === 'admin') {
+        next.add('system')
+      }
+      return next
+    })
+  }
+
+  const save = async () => {
+    setError(null)
+    setMessage(null)
+    setSaving(true)
+    const nextVisible = new Set(visible)
+    if (role === 'admin') {
+      nextVisible.add('system')
+    }
+    try {
+      await onSave(member, {
+        display_name: displayName.trim() || member.display_name,
+        role,
+        active,
+        visible_nav_items: uniqueNavItems([...nextVisible]),
+      })
+      setMessage('Gespeichert.')
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Mitglied konnte nicht gespeichert werden.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const sendReset = async () => {
+    setError(null)
+    setMessage(null)
+    setSaving(true)
+    try {
+      await onReset(member)
+      setMessage('Reset-Mail wurde versendet.')
+    } catch (resetError) {
+      setError(resetError instanceof Error ? resetError.message : 'Reset-Mail konnte nicht versendet werden.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <article className={`member-admin-card ${!member.active ? 'is-inactive' : ''}`}>
+      <div className="member-admin-header">
+        <div>
+          <strong>{member.display_name}</strong>
+          <span>{member.email ?? 'Keine E-Mail im Profil'}</span>
+        </div>
+        <Tag tone={isCurrentUser ? 'good' : member.active ? 'info' : 'neutral'}>
+          {isCurrentUser ? 'Du' : member.active ? 'aktiv' : 'inaktiv'}
+        </Tag>
+      </div>
+
+      <div className="two-column-fields">
+        <Field label="Name">
+          <TextInput disabled={!canManage || saving} value={displayName} onChange={(event) => setDisplayName(event.target.value)} />
+        </Field>
+        <Field label="Rolle">
+          <Select disabled={!canManage || saving} value={role} onChange={(event) => setRole(event.target.value as Role)}>
+            {(['adult', 'child', 'admin'] as Role[]).map((entry) => (
+              <option key={entry} value={entry}>
+                {roleLabel[entry]}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      </div>
+
+      <label className="member-active-toggle">
+        <input
+          checked={active}
+          disabled={!canManage || saving || isCurrentUser}
+          type="checkbox"
+          onChange={(event) => setActive(event.target.checked)}
+        />
+        <span>Mitglied aktiv</span>
+      </label>
+
+      <div className="visibility-options">
+        {navigationItems.map((item) => {
+          const lockedSystem = role === 'admin' && item.id === 'system'
+          return (
+            <label key={item.id} className={!item.defaultVisible && !visible.has(item.id) ? 'is-muted' : ''}>
+              <input
+                checked={visible.has(item.id)}
+                disabled={!canManage || saving || lockedSystem}
+                type="checkbox"
+                onChange={(event) => toggleNav(item.id, event.target.checked)}
+              />
+              <span>{item.label}</span>
+              {!item.defaultVisible && <small>optional</small>}
+            </label>
+          )
+        })}
+      </div>
+
+      {error && <p className="form-error">{error}</p>}
+      {message && <p className="form-success">{message}</p>}
+      <div className="member-admin-actions">
+        <Button disabled={!canManage || saving} type="button" onClick={() => void save()}>
+          <Save size={17} />
+          Speichern
+        </Button>
+        <Button disabled={!canManage || saving || !member.email} type="button" variant="secondary" onClick={() => void sendReset()}>
+          <Mail size={17} />
+          Reset-Mail
+        </Button>
+      </div>
+    </article>
+  )
+}
 
 export const SettingsPage = () => {
   const { data, actions } = useFamilyRoute()
@@ -27,20 +175,16 @@ export const SettingsPage = () => {
   const [inviteRole, setInviteRole] = useState<Role>('adult')
   const [inviteMessage, setInviteMessage] = useState<string | null>(null)
   const [inviteError, setInviteError] = useState<string | null>(null)
-  const [navMessage, setNavMessage] = useState<string | null>(null)
-  const [navError, setNavError] = useState<string | null>(null)
-  const [savingNavFor, setSavingNavFor] = useState<string | null>(null)
 
   const activeMembers = data.memberships.filter((entry) => entry.active)
   const currentMembership =
     activeMembers.find((entry) => entry.user_id === user?.id) ?? membership ?? activeMembers[0] ?? null
   const isAdmin = currentMembership?.role === 'admin'
   const canInvite = Boolean(configured && isAdmin && actions.inviteFamilyMember)
-  const canManageNavigation = Boolean(isAdmin && actions.updateMembershipNavigation)
+  const canManageMembers = Boolean(configured && isAdmin && actions.updateFamilyMember)
   const district = data.wasteDistricts[0]
   const activitiesWithSource = data.activitySuggestions.filter((activity) => activity.url).length
   const pushReady = Boolean(appConfig.vapidPublicKey)
-  const defaultVisible = useMemo(() => new Set(defaultVisibleNavItemIds), [])
 
   const onPasswordSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -82,7 +226,7 @@ export const SettingsPage = () => {
         display_name: inviteName.trim(),
         role: inviteRole,
       })
-      setInviteMessage(`Einladung für ${inviteEmail.trim()} wurde vorbereitet.`)
+      setInviteMessage(`Einladung für ${inviteEmail.trim()} wurde vorbereitet. Bitte auch den Junk-Ordner prüfen.`)
       setInviteEmail('')
       setInviteName('')
       setInviteRole('adult')
@@ -91,34 +235,24 @@ export const SettingsPage = () => {
     }
   }
 
-  const updateMemberNav = async (memberUserId: string, navId: NavItemId, checked: boolean) => {
-    const member = activeMembers.find((entry) => entry.user_id === memberUserId)
-    if (!member || !actions.updateMembershipNavigation) {
-      return
+  const saveMember = async (
+    member: FamilyMembership,
+    input: { display_name: string; role: Role; active: boolean; visible_nav_items: NavItemId[] },
+  ) => {
+    if (!actions.updateFamilyMember) {
+      throw new Error('Nutzerverwaltung ist in dieser Umgebung nicht aktiv.')
     }
+    await actions.updateFamilyMember(member.user_id, input)
+  }
 
-    setNavError(null)
-    setNavMessage(null)
-    setSavingNavFor(memberUserId)
-
-    const current = new Set(visibleNavIdsForMembership(member))
-    if (checked) {
-      current.add(navId)
-    } else {
-      current.delete(navId)
+  const sendResetMail = async (member: FamilyMembership) => {
+    if (!member.email) {
+      throw new Error('Für dieses Mitglied ist keine E-Mail im Profil gespeichert.')
     }
-    if (member.role === 'admin') {
-      current.add('system')
+    if (!actions.sendPasswordReset) {
+      throw new Error('Passwort-Reset ist in dieser Umgebung nicht aktiv.')
     }
-
-    try {
-      await actions.updateMembershipNavigation(memberUserId, uniqueNavItems([...current]))
-      setNavMessage('Menü-Sichtbarkeit wurde gespeichert.')
-    } catch (error) {
-      setNavError(error instanceof Error ? error.message : 'Menü-Sichtbarkeit konnte nicht gespeichert werden.')
-    } finally {
-      setSavingNavFor(null)
-    }
+    await actions.sendPasswordReset(member.email)
   }
 
   return (
@@ -126,9 +260,18 @@ export const SettingsPage = () => {
       <section className="page-title span-3">
         <div>
           <h1>System</h1>
-          <p>Status, Zugang, Sichtbarkeit, Quellenqualität und Veröffentlichung.</p>
+          <p>Status, Zugang, Nutzerverwaltung, Quellenqualität und Veröffentlichung.</p>
         </div>
       </section>
+
+      <Card title="Angemeldet als">
+        <div className="setup-card">
+          <UserCheck size={24} />
+          <strong>{currentMembership?.display_name ?? user?.email ?? 'Nicht angemeldet'}</strong>
+          <span>{user?.email ? user.email : 'Aktueller Zugang konnte nicht gelesen werden.'}</span>
+          <Tag tone={isAdmin ? 'good' : 'neutral'}>{currentMembership ? roleLabel[currentMembership.role] : 'ohne Rolle'}</Tag>
+        </div>
+      </Card>
 
       <Card title="Speicher">
         <div className="setup-card">
@@ -152,96 +295,11 @@ export const SettingsPage = () => {
         </div>
       </Card>
 
-      <Card title="Mitglieder">
-        <div className="setup-card">
-          <UserPlus size={24} />
-          <strong>{activeMembers.length} aktive Mitglieder</strong>
-          <span>{isAdmin ? 'Du kannst weitere Personen einladen.' : 'Einladungen sind Admins vorbehalten.'}</span>
-          <Tag tone={canInvite ? 'good' : 'warn'}>{canInvite ? 'Einladung aktiv' : 'Setup nötig'}</Tag>
-        </div>
-      </Card>
-
-      <Card title="Menü-Sichtbarkeit" className="span-3">
-        <div className="visibility-admin">
-          <div className="form-intro">
-            <SlidersHorizontal size={22} />
-            <span>Admins können pro Familienmitglied festlegen, welche Menüpunkte in der App sichtbar sind.</span>
-          </div>
-          <div className="visibility-grid">
-            {activeMembers.map((member) => {
-              const visible = new Set(visibleNavIdsForMembership(member))
-              return (
-                <article key={member.user_id}>
-                  <div className="visibility-member-title">
-                    <strong>{member.display_name}</strong>
-                    <Tag tone={member.role === 'admin' ? 'info' : 'neutral'}>{roleLabel[member.role]}</Tag>
-                  </div>
-                  <div className="visibility-options">
-                    {navigationItems.map((item) => {
-                      const lockedSystem = member.role === 'admin' && item.id === 'system'
-                      return (
-                        <label key={item.id} className={!item.defaultVisible && !visible.has(item.id) ? 'is-muted' : ''}>
-                          <input
-                            checked={visible.has(item.id)}
-                            disabled={!canManageNavigation || savingNavFor === member.user_id || lockedSystem}
-                            type="checkbox"
-                            onChange={(event) => updateMemberNav(member.user_id, item.id, event.target.checked)}
-                          />
-                          <span>{item.label}</span>
-                          {!item.defaultVisible && defaultVisible.has(item.id) === false && <small>ausgeblendet</small>}
-                        </label>
-                      )
-                    })}
-                  </div>
-                </article>
-              )
-            })}
-          </div>
-          {navError && <p className="form-error">{navError}</p>}
-          {navMessage && <p className="form-success">{navMessage}</p>}
-          {!canManageNavigation && <p className="form-hint">Menü-Sichtbarkeit ist nur für Admins aktiv und benötigt die neue Supabase-Migration.</p>}
-        </div>
-      </Card>
-
-      <Card title="Passwort ändern" className="span-2">
-        <form className="form-stack" onSubmit={onPasswordSubmit}>
-          <div className="form-intro">
-            <KeyRound size={22} />
-            <span>Ändert das Passwort für den aktuell angemeldeten Supabase-Zugang.</span>
-          </div>
-          <div className="two-column-fields">
-            <Field label="Neues Passwort">
-              <TextInput
-                autoComplete="new-password"
-                disabled={!configured}
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-            </Field>
-            <Field label="Wiederholen">
-              <TextInput
-                autoComplete="new-password"
-                disabled={!configured}
-                type="password"
-                value={passwordRepeat}
-                onChange={(event) => setPasswordRepeat(event.target.value)}
-              />
-            </Field>
-          </div>
-          {passwordError && <p className="form-error">{passwordError}</p>}
-          {passwordMessage && <p className="form-success">{passwordMessage}</p>}
-          <Button disabled={!configured} type="submit">
-            Passwort speichern
-          </Button>
-        </form>
-      </Card>
-
       <Card title="Person einladen">
         <form className="form-stack" onSubmit={onInviteSubmit}>
           <div className="form-intro">
             <Send size={22} />
-            <span>Einladungen laufen über eine Supabase Edge Function, nicht über Admin-Schlüssel im Browser.</span>
+            <span>Einladungen laufen über Supabase. Die Mail kann im Junk-Ordner landen.</span>
           </div>
           <Field label="E-Mail">
             <TextInput
@@ -272,6 +330,62 @@ export const SettingsPage = () => {
         </form>
       </Card>
 
+      <Card title="Passwort ändern" className="span-2">
+        <form className="form-stack" onSubmit={onPasswordSubmit}>
+          <div className="form-intro">
+            <KeyRound size={22} />
+            <span>Ändert das Passwort für den aktuell angemeldeten Zugang.</span>
+          </div>
+          <div className="two-column-fields">
+            <Field label="Neues Passwort">
+              <TextInput
+                autoComplete="new-password"
+                disabled={!configured}
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </Field>
+            <Field label="Wiederholen">
+              <TextInput
+                autoComplete="new-password"
+                disabled={!configured}
+                type="password"
+                value={passwordRepeat}
+                onChange={(event) => setPasswordRepeat(event.target.value)}
+              />
+            </Field>
+          </div>
+          {passwordError && <p className="form-error">{passwordError}</p>}
+          {passwordMessage && <p className="form-success">{passwordMessage}</p>}
+          <Button disabled={!configured} type="submit">
+            Passwort speichern
+          </Button>
+        </form>
+      </Card>
+
+      <Card title="Nutzerverwaltung" className="span-3">
+        <div className="visibility-admin">
+          <div className="form-intro">
+            <UserPlus size={22} />
+            <span>Admins verwalten Name, Rolle, Status, Menüpunkte und Passwort-Reset pro Mitglied.</span>
+          </div>
+          <div className="member-admin-grid">
+            {data.memberships.map((member) => (
+              <MemberAdminCard
+                key={member.user_id}
+                canManage={canManageMembers}
+                currentUserId={user?.id}
+                member={member}
+                onReset={sendResetMail}
+                onSave={saveMember}
+              />
+            ))}
+          </div>
+          {!canManageMembers && <p className="form-hint">Nutzerverwaltung ist nur für Admins aktiv.</p>}
+        </div>
+      </Card>
+
       <Card title="Datenqualität" className="span-3">
         <div className="quality-grid">
           <article>
@@ -284,9 +398,16 @@ export const SettingsPage = () => {
             <ShieldCheck size={22} />
             <strong>Aktivitäten</strong>
             <span>
-              {data.activitySuggestions.length} Vorschläge, davon {activitiesWithSource} mit Link.
+              {data.activitySuggestions.length} Vorschläge, davon {activitiesWithSource} mit Link. Aktualisieren lädt aktuell nur
+              Supabase-Daten neu.
             </span>
-            <Tag tone="warn">Preise und Termine vor Buchung prüfen</Tag>
+            <Tag tone="warn">keine automatische Internetsuche</Tag>
+          </article>
+          <article>
+            <ShieldCheck size={22} />
+            <strong>Rezepte</strong>
+            <span>Rezepte kommen aktuell aus Seed- oder Familiendaten und werden nicht automatisch neu generiert.</span>
+            <Tag tone="neutral">manuell / Seed</Tag>
           </article>
           <article>
             <ShieldCheck size={22} />

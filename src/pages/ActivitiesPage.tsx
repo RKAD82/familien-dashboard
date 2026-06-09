@@ -23,7 +23,7 @@ export const ActivitiesPage = () => {
       <section className="page-title">
         <div>
           <h1>Aktivitäten</h1>
-          <p>Konkrete Vorschläge für Pulheim, Köln und Umgebung mit Termin, Preis, Ort und Quelle.</p>
+          <p>Vorschläge aus den gespeicherten Supabase-Daten. Aktualisieren lädt neu, sucht aber nicht automatisch im Internet.</p>
         </div>
         <Button variant="secondary" onClick={() => void actions.refresh()}>
           <RefreshCw size={18} />
@@ -36,10 +36,6 @@ export const ActivitiesPage = () => {
           <Card key={activity.id}>
             <article className="activity-card">
               <div className="activity-card-topline">
-                <div className="score" aria-label={`Passung ${activity.family_score} von 100`}>
-                  <strong>{activity.family_score}</strong>
-                  <span>Passung</span>
-                </div>
                 <div className="activity-card-tags">
                   <Tag>{activity.category}</Tag>
                   <Tag tone="info">{activity.distance_label}</Tag>

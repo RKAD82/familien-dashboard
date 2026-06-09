@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { CalendarDays } from 'lucide-react'
 import { addDays, currentWeekDays, expandRecurringEvents, formatDay, formatLongDate, formatTime, isInCurrentWeek, toDateKey } from '../lib/date'
 import { useFamilyRoute } from '../routes/context'
@@ -6,13 +7,20 @@ import { Card, EmptyState, Tag } from '../components/ui'
 
 export const WeekPage = () => {
   const { data } = useFamilyRoute()
+  const [searchParams, setSearchParams] = useSearchParams()
   const days = currentWeekDays()
-  const [selectedKey, setSelectedKey] = useState(toDateKey(new Date()))
-  const selectedDay = days.find((day) => toDateKey(day) === selectedKey) ?? days[0]
+  const requestedDay = searchParams.get('tag')
+  const [selectedKey, setSelectedKey] = useState(requestedDay ?? toDateKey(new Date()))
+  const activeKey = days.some((day) => toDateKey(day) === requestedDay) ? requestedDay ?? selectedKey : selectedKey
+  const selectedDay = days.find((day) => toDateKey(day) === activeKey) ?? days[0]
   const weekEvents = expandRecurringEvents(data.events, days[0], addDays(days[6], 1))
   const weekTasks = data.tasks.filter((task) => task.due_at && isInCurrentWeek(task.due_at) && task.status !== 'done')
-  const selectedEvents = weekEvents.filter((event) => toDateKey(event.starts_at) === selectedKey)
-  const selectedTasks = weekTasks.filter((task) => task.due_at && toDateKey(task.due_at) === selectedKey)
+  const selectedEvents = weekEvents.filter((event) => toDateKey(event.starts_at) === activeKey)
+  const selectedTasks = weekTasks.filter((task) => task.due_at && toDateKey(task.due_at) === activeKey)
+  const selectDay = (key: string) => {
+    setSelectedKey(key)
+    setSearchParams({ tag: key })
+  }
 
   return (
     <div className="page-grid week-page">
@@ -32,9 +40,9 @@ export const WeekPage = () => {
           return (
             <button
               key={key}
-              className={`week-day-card ${key === selectedKey ? 'selected' : ''}`}
+              className={`week-day-card ${key === activeKey ? 'selected' : ''}`}
               type="button"
-              onClick={() => setSelectedKey(key)}
+              onClick={() => selectDay(key)}
             >
               <div className="week-day-title">
                 <CalendarDays size={18} />
