@@ -4,8 +4,10 @@ import { requireSupabase, supabase } from '../lib/supabase'
 import type {
   ActivitySuggestion,
   DashboardData,
+  EmergencyItem,
   EventItem,
   Family,
+  FamilyContact,
   FamilyLink,
   LinkCollection,
   NoteItem,
@@ -22,6 +24,9 @@ import type {
   WasteSortingItem,
 } from '../types'
 
+const isMissingOptionalTable = (error: { code?: string; message?: string } | null | undefined) =>
+  Boolean(error && (error.code === '42P01' || error.message?.includes('does not exist')))
+
 const emptyData = (family: Family): DashboardData => ({
   family,
   memberships: [],
@@ -31,6 +36,8 @@ const emptyData = (family: Family): DashboardData => ({
   shoppingItems: [],
   linkCollections: [],
   links: [],
+  contacts: [],
+  emergencyItems: [],
   notes: [],
   wasteDistricts: [],
   wasteEvents: [],
@@ -65,6 +72,8 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       tasks,
       shoppingLists,
       linkCollections,
+      contacts,
+      emergencyItems,
       notes,
       districts,
       recipes,
@@ -77,6 +86,8 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       supabase.from('tasks').select('*').eq('family_id', familyId).order('due_at', { nullsFirst: false }),
       supabase.from('shopping_lists').select('*').eq('family_id', familyId).eq('archived', false).order('title'),
       supabase.from('link_collections').select('*').eq('family_id', familyId).order('sort_order'),
+      supabase.from('family_contacts').select('*').eq('family_id', familyId).order('favorite', { ascending: false }).order('name'),
+      supabase.from('emergency_items').select('*').eq('family_id', familyId).order('priority').order('title'),
       supabase.from('notes').select('*').eq('family_id', familyId).order('updated_at', { ascending: false }),
       supabase.from('waste_districts').select('*').eq('active', true),
       supabase.from('recipes').select('*').eq('family_id', familyId).eq('status', 'active').order('title'),
@@ -98,13 +109,15 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       tasks,
       shoppingLists,
       linkCollections,
+      contacts,
+      emergencyItems,
       notes,
       districts,
       recipes,
       recipeSuggestions,
       activities,
       deliveries,
-    ].find((result) => result.error)
+    ].find((result) => result.error && !isMissingOptionalTable(result.error))
 
     if (firstError?.error) {
       setError(firstError.error.message)
@@ -158,6 +171,8 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       shoppingItems: (shoppingItems.data as ShoppingItem[] | null) ?? [],
       linkCollections: (linkCollections.data as LinkCollection[] | null) ?? [],
       links: (links.data as FamilyLink[] | null) ?? [],
+      contacts: isMissingOptionalTable(contacts.error) ? [] : ((contacts.data as FamilyContact[] | null) ?? []),
+      emergencyItems: isMissingOptionalTable(emergencyItems.error) ? [] : ((emergencyItems.data as EmergencyItem[] | null) ?? []),
       notes: (notes.data as NoteItem[] | null) ?? [],
       wasteDistricts: (districts.data as WasteDistrict[] | null) ?? [],
       wasteEvents: (wasteEvents.data as WasteEvent[] | null) ?? [],
@@ -200,6 +215,20 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
           void loadData()
         },
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'family_contacts', filter: `family_id=eq.${familyId}` },
+        () => {
+          void loadData()
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'emergency_items', filter: `family_id=eq.${familyId}` },
+        () => {
+          void loadData()
+        },
+      )
       .subscribe()
 
     return () => {
@@ -210,7 +239,21 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
   const actions = useMemo(
     () => ({
       refresh: loadData,
-      createEvent: async (input: Pick<EventItem, 'title' | 'starts_at' | 'ends_at' | 'all_day' | 'category' | 'location' | 'notes' | 'is_important' | 'notify_family'>) => {
+      createEvent: async (
+        input: Pick<
+          EventItem,
+          | 'title'
+          | 'starts_at'
+          | 'ends_at'
+          | 'all_day'
+          | 'recurrence_rule'
+          | 'category'
+          | 'location'
+          | 'notes'
+          | 'is_important'
+          | 'notify_family'
+        >,
+      ) => {
         const client = requireSupabase()
         if (!familyId) {
           return
@@ -366,6 +409,43 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         }
         await loadData()
       },
+      createFamilyContact: async (
+        input: Pick<FamilyContact, 'name' | 'relation' | 'phone' | 'mobile' | 'email' | 'address' | 'notes' | 'favorite'>,
+      ) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          return
+        }
+        const { error: insertError } = await client.from('family_contacts').insert({
+          ...input,
+          family_id: familyId,
+          created_by: userId,
+        })
+        if (insertError) {
+          throw insertError
+        }
+        await loadData()
+      },
+      createEmergencyItem: async (
+        input: Pick<
+          EmergencyItem,
+          'type' | 'title' | 'primary_text' | 'secondary_text' | 'phone' | 'address' | 'notes' | 'priority'
+        >,
+      ) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          return
+        }
+        const { error: insertError } = await client.from('emergency_items').insert({
+          ...input,
+          family_id: familyId,
+          created_by: userId,
+        })
+        if (insertError) {
+          throw insertError
+        }
+        await loadData()
+      },
       createNote: async (input: Pick<NoteItem, 'title' | 'body' | 'category' | 'visibility' | 'is_important' | 'notify_family'>) => {
         const client = requireSupabase()
         if (!familyId) {
@@ -426,6 +506,21 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         const { error: insertError } = await client.from('shopping_items').insert(payload)
         if (insertError) {
           throw insertError
+        }
+        await loadData()
+      },
+      updateMembershipNavigation: async (memberUserId: string, visibleNavItems: string[]) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          return
+        }
+        const { error: updateError } = await client
+          .from('family_memberships')
+          .update({ visible_nav_items: visibleNavItems })
+          .eq('family_id', familyId)
+          .eq('user_id', memberUserId)
+        if (updateError) {
+          throw updateError
         }
         await loadData()
       },

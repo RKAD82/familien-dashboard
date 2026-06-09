@@ -1,5 +1,21 @@
 ﻿export type Role = 'admin' | 'adult' | 'child'
 
+export type NavItemId =
+  | 'heute'
+  | 'woche'
+  | 'kalender'
+  | 'aufgaben'
+  | 'einkauf'
+  | 'links'
+  | 'notizen'
+  | 'abfall'
+  | 'rezepte'
+  | 'aktivitaeten'
+  | 'meldungen'
+  | 'kontakte'
+  | 'notfall'
+  | 'system'
+
 export type EntityStatus = 'open' | 'today' | 'waiting' | 'done' | 'discarded'
 
 export type WasteType =
@@ -35,6 +51,7 @@ export interface FamilyMembership {
   display_name: string
   active: boolean
   notification_preferences?: Record<string, unknown>
+  visible_nav_items?: NavItemId[] | null
   family?: Family
 }
 
@@ -122,6 +139,38 @@ export interface FamilyLink {
   visible_to: string[] | null
   is_important: boolean
   notify_family: boolean
+}
+
+export interface FamilyContact {
+  id: string
+  family_id: string
+  name: string
+  relation: string | null
+  phone: string | null
+  mobile: string | null
+  email: string | null
+  address: string | null
+  notes: string | null
+  favorite: boolean
+  created_by: string | null
+  updated_at?: string
+}
+
+export type EmergencyItemType = 'contact' | 'address' | 'medical' | 'info'
+
+export interface EmergencyItem {
+  id: string
+  family_id: string
+  type: EmergencyItemType
+  title: string
+  primary_text: string
+  secondary_text: string | null
+  phone: string | null
+  address: string | null
+  notes: string | null
+  priority: number
+  created_by: string | null
+  updated_at?: string
 }
 
 export interface NoteItem {
@@ -281,6 +330,8 @@ export interface DashboardData {
   shoppingItems: ShoppingItem[]
   linkCollections: LinkCollection[]
   links: FamilyLink[]
+  contacts: FamilyContact[]
+  emergencyItems: EmergencyItem[]
   notes: NoteItem[]
   wasteDistricts: WasteDistrict[]
   wasteEvents: WasteEvent[]

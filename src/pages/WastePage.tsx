@@ -1,9 +1,10 @@
 ﻿import { useMemo, useState } from 'react'
 import { Recycle, Search } from 'lucide-react'
 import { formatDay } from '../lib/date'
-import { getUpcomingWasteEvents, getWasteEventsForMonth, searchWasteSorting, wasteColors, wasteLabels } from '../lib/waste'
+import { getUpcomingWasteEvents, getWasteEventsForMonth, searchWasteSorting, wasteLabels } from '../lib/waste'
 import { useFamilyRoute } from '../routes/context'
-import { Card, EmptyState, StatusDot, Tag, TextInput } from '../components/ui'
+import { Card, EmptyState, Tag, TextInput } from '../components/ui'
+import { WasteIcon } from '../components/WasteIcon'
 
 export const WastePage = () => {
   const { data } = useFamilyRoute()
@@ -27,7 +28,7 @@ export const WastePage = () => {
         <div className="waste-list">
           {nextEvents.map((event) => (
             <article key={event.id}>
-              <StatusDot color={wasteColors[event.waste_type]} />
+              <WasteIcon type={event.waste_type} />
               <div>
                 <strong>{event.title}</strong>
                 <span>{formatDay(`${event.date}T06:00:00Z`)}</span>
@@ -52,7 +53,7 @@ export const WastePage = () => {
           <div className="month-list">
             {monthEvents.map((event) => (
               <article key={event.id}>
-                <StatusDot color={wasteColors[event.waste_type]} />
+                <WasteIcon type={event.waste_type} />
                 <strong>{event.date.slice(8, 10)}.</strong>
                 <span>{wasteLabels[event.waste_type]}</span>
               </article>

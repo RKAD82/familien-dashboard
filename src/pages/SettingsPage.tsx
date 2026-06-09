@@ -1,10 +1,11 @@
-import { Database, GitBranch, KeyRound, Send, ShieldCheck, UserPlus } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { Database, GitBranch, KeyRound, Send, ShieldCheck, SlidersHorizontal, UserPlus } from 'lucide-react'
+import { useMemo, useState, type FormEvent } from 'react'
+import { Button, Card, Field, Select, Tag, TextInput } from '../components/ui'
 import { appConfig } from '../config'
 import { useAuth } from '../hooks/useAuth'
+import { defaultVisibleNavItemIds, navigationItems, visibleNavIdsForMembership } from '../navigation'
 import { useFamilyRoute } from '../routes/context'
-import type { Role } from '../types'
-import { Button, Card, Field, Select, Tag, TextInput } from '../components/ui'
+import type { NavItemId, Role } from '../types'
 
 const roleLabel: Record<Role, string> = {
   admin: 'Admin',
@@ -12,9 +13,11 @@ const roleLabel: Record<Role, string> = {
   child: 'Kind',
 }
 
+const uniqueNavItems = (ids: NavItemId[]) => navigationItems.filter((item) => ids.includes(item.id)).map((item) => item.id)
+
 export const SettingsPage = () => {
   const { data, actions } = useFamilyRoute()
-  const { configured, membership, updatePassword } = useAuth()
+  const { configured, membership, updatePassword, user } = useAuth()
   const [password, setPassword] = useState('')
   const [passwordRepeat, setPasswordRepeat] = useState('')
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null)
@@ -24,13 +27,20 @@ export const SettingsPage = () => {
   const [inviteRole, setInviteRole] = useState<Role>('adult')
   const [inviteMessage, setInviteMessage] = useState<string | null>(null)
   const [inviteError, setInviteError] = useState<string | null>(null)
+  const [navMessage, setNavMessage] = useState<string | null>(null)
+  const [navError, setNavError] = useState<string | null>(null)
+  const [savingNavFor, setSavingNavFor] = useState<string | null>(null)
 
-  const isAdmin = membership?.role === 'admin'
-  const canInvite = Boolean(configured && isAdmin && actions.inviteFamilyMember)
   const activeMembers = data.memberships.filter((entry) => entry.active)
+  const currentMembership =
+    activeMembers.find((entry) => entry.user_id === user?.id) ?? membership ?? activeMembers[0] ?? null
+  const isAdmin = currentMembership?.role === 'admin'
+  const canInvite = Boolean(configured && isAdmin && actions.inviteFamilyMember)
+  const canManageNavigation = Boolean(isAdmin && actions.updateMembershipNavigation)
   const district = data.wasteDistricts[0]
   const activitiesWithSource = data.activitySuggestions.filter((activity) => activity.url).length
   const pushReady = Boolean(appConfig.vapidPublicKey)
+  const defaultVisible = useMemo(() => new Set(defaultVisibleNavItemIds), [])
 
   const onPasswordSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -81,12 +91,42 @@ export const SettingsPage = () => {
     }
   }
 
+  const updateMemberNav = async (memberUserId: string, navId: NavItemId, checked: boolean) => {
+    const member = activeMembers.find((entry) => entry.user_id === memberUserId)
+    if (!member || !actions.updateMembershipNavigation) {
+      return
+    }
+
+    setNavError(null)
+    setNavMessage(null)
+    setSavingNavFor(memberUserId)
+
+    const current = new Set(visibleNavIdsForMembership(member))
+    if (checked) {
+      current.add(navId)
+    } else {
+      current.delete(navId)
+    }
+    if (member.role === 'admin') {
+      current.add('system')
+    }
+
+    try {
+      await actions.updateMembershipNavigation(memberUserId, uniqueNavItems([...current]))
+      setNavMessage('Menü-Sichtbarkeit wurde gespeichert.')
+    } catch (error) {
+      setNavError(error instanceof Error ? error.message : 'Menü-Sichtbarkeit konnte nicht gespeichert werden.')
+    } finally {
+      setSavingNavFor(null)
+    }
+  }
+
   return (
     <div className="page-grid settings-page">
       <section className="page-title span-3">
         <div>
           <h1>System</h1>
-          <p>Status, Zugang, Quellenqualität und Veröffentlichung.</p>
+          <p>Status, Zugang, Sichtbarkeit, Quellenqualität und Veröffentlichung.</p>
         </div>
       </section>
 
@@ -118,6 +158,48 @@ export const SettingsPage = () => {
           <strong>{activeMembers.length} aktive Mitglieder</strong>
           <span>{isAdmin ? 'Du kannst weitere Personen einladen.' : 'Einladungen sind Admins vorbehalten.'}</span>
           <Tag tone={canInvite ? 'good' : 'warn'}>{canInvite ? 'Einladung aktiv' : 'Setup nötig'}</Tag>
+        </div>
+      </Card>
+
+      <Card title="Menü-Sichtbarkeit" className="span-3">
+        <div className="visibility-admin">
+          <div className="form-intro">
+            <SlidersHorizontal size={22} />
+            <span>Admins können pro Familienmitglied festlegen, welche Menüpunkte in der App sichtbar sind.</span>
+          </div>
+          <div className="visibility-grid">
+            {activeMembers.map((member) => {
+              const visible = new Set(visibleNavIdsForMembership(member))
+              return (
+                <article key={member.user_id}>
+                  <div className="visibility-member-title">
+                    <strong>{member.display_name}</strong>
+                    <Tag tone={member.role === 'admin' ? 'info' : 'neutral'}>{roleLabel[member.role]}</Tag>
+                  </div>
+                  <div className="visibility-options">
+                    {navigationItems.map((item) => {
+                      const lockedSystem = member.role === 'admin' && item.id === 'system'
+                      return (
+                        <label key={item.id} className={!item.defaultVisible && !visible.has(item.id) ? 'is-muted' : ''}>
+                          <input
+                            checked={visible.has(item.id)}
+                            disabled={!canManageNavigation || savingNavFor === member.user_id || lockedSystem}
+                            type="checkbox"
+                            onChange={(event) => updateMemberNav(member.user_id, item.id, event.target.checked)}
+                          />
+                          <span>{item.label}</span>
+                          {!item.defaultVisible && defaultVisible.has(item.id) === false && <small>ausgeblendet</small>}
+                        </label>
+                      )
+                    })}
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+          {navError && <p className="form-error">{navError}</p>}
+          {navMessage && <p className="form-success">{navMessage}</p>}
+          {!canManageNavigation && <p className="form-hint">Menü-Sichtbarkeit ist nur für Admins aktiv und benötigt die neue Supabase-Migration.</p>}
         </div>
       </Card>
 

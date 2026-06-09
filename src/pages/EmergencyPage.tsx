@@ -1,0 +1,160 @@
+import { AlertTriangle, HeartPulse, MapPin, Phone, Plus, ShieldAlert } from 'lucide-react'
+import { useState, type FormEvent } from 'react'
+import { useFamilyRoute } from '../routes/context'
+import type { EmergencyItemType } from '../types'
+import { Button, Card, EmptyState, Field, Select, Tag, TextArea, TextInput } from '../components/ui'
+
+const typeLabels: Record<EmergencyItemType, string> = {
+  contact: 'Notfallkontakt',
+  address: 'Notfalladresse',
+  medical: 'Medizinisch',
+  info: 'Hinweis',
+}
+
+const typeIcons: Record<EmergencyItemType, typeof ShieldAlert> = {
+  contact: ShieldAlert,
+  address: MapPin,
+  medical: HeartPulse,
+  info: AlertTriangle,
+}
+
+export const EmergencyPage = () => {
+  const { data, actions } = useFamilyRoute()
+  const [type, setType] = useState<EmergencyItemType>('contact')
+  const [title, setTitle] = useState('')
+  const [primaryText, setPrimaryText] = useState('')
+  const [secondaryText, setSecondaryText] = useState('')
+  const [phone, setPhone] = useState('')
+  const [address, setAddress] = useState('')
+  const [notes, setNotes] = useState('')
+  const [priority, setPriority] = useState(1)
+  const [error, setError] = useState<string | null>(null)
+  const emergencyItems = [...data.emergencyItems].sort((a, b) => a.priority - b.priority || a.title.localeCompare(b.title))
+
+  const onSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    setError(null)
+
+    if (!title.trim() || !primaryText.trim()) {
+      setError('Bitte Titel und Hauptinformation eintragen.')
+      return
+    }
+
+    try {
+      await actions.createEmergencyItem({
+        type,
+        title: title.trim(),
+        primary_text: primaryText.trim(),
+        secondary_text: secondaryText.trim() || null,
+        phone: phone.trim() || null,
+        address: address.trim() || null,
+        notes: notes.trim() || null,
+        priority,
+      })
+      setType('contact')
+      setTitle('')
+      setPrimaryText('')
+      setSecondaryText('')
+      setPhone('')
+      setAddress('')
+      setNotes('')
+      setPriority(1)
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Notfall-Eintrag konnte nicht gespeichert werden.')
+    }
+  }
+
+  return (
+    <div className="page-grid emergency-page">
+      <section className="page-title span-3">
+        <div>
+          <h1>Notfall</h1>
+          <p>Notfallkontakte, wichtige Nummern, Adressen und Hinweise an einem Ort.</p>
+        </div>
+      </section>
+
+      <Card title="Notfall-Eintrag anlegen">
+        <form className="form-stack" onSubmit={onSubmit}>
+          <Field label="Art">
+            <Select value={type} onChange={(event) => setType(event.target.value as EmergencyItemType)}>
+              {Object.entries(typeLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Titel">
+            <TextInput value={title} onChange={(event) => setTitle(event.target.value)} />
+          </Field>
+          <Field label="Hauptinformation">
+            <TextInput placeholder="z.B. Name, Nummer oder Adresse" value={primaryText} onChange={(event) => setPrimaryText(event.target.value)} />
+          </Field>
+          <Field label="Zusatz">
+            <TextInput value={secondaryText} onChange={(event) => setSecondaryText(event.target.value)} />
+          </Field>
+          <div className="two-column-fields">
+            <Field label="Telefon">
+              <TextInput value={phone} onChange={(event) => setPhone(event.target.value)} />
+            </Field>
+            <Field label="Priorität">
+              <TextInput
+                min={1}
+                max={9}
+                type="number"
+                value={priority}
+                onChange={(event) => setPriority(Number(event.target.value))}
+              />
+            </Field>
+          </div>
+          <Field label="Adresse">
+            <TextArea rows={3} value={address} onChange={(event) => setAddress(event.target.value)} />
+          </Field>
+          <Field label="Bemerkungen">
+            <TextArea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} />
+          </Field>
+          {error && <p className="form-error">{error}</p>}
+          <Button type="submit">
+            <Plus size={18} />
+            Eintrag speichern
+          </Button>
+        </form>
+      </Card>
+
+      <Card title="Notfallübersicht" className="span-2 emergency-overview-card">
+        {emergencyItems.length ? (
+          <div className="emergency-grid">
+            {emergencyItems.map((item) => {
+              const Icon = typeIcons[item.type]
+              return (
+                <article key={item.id} className="emergency-card">
+                  <div className="emergency-icon">
+                    <Icon size={22} />
+                  </div>
+                  <div>
+                    <div className="emergency-card-header">
+                      <strong>{item.title}</strong>
+                      <Tag tone={item.priority <= 2 ? 'warn' : 'info'}>{typeLabels[item.type]}</Tag>
+                    </div>
+                    <p>{item.primary_text}</p>
+                    {item.secondary_text && <span>{item.secondary_text}</span>}
+                    {item.phone && (
+                      <a href={`tel:${item.phone}`}>
+                        <Phone size={16} />
+                        {item.phone}
+                      </a>
+                    )}
+                    {item.address && <small>{item.address}</small>}
+                    {item.notes && <small>{item.notes}</small>}
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        ) : (
+          <EmptyState title="Noch keine Notfallinfos" body="Lege links den ersten Notfallkontakt oder eine Adresse an." />
+        )}
+      </Card>
+    </div>
+  )
+}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CalendarDays } from 'lucide-react'
-import { currentWeekDays, formatDay, formatLongDate, formatTime, isInCurrentWeek, toDateKey } from '../lib/date'
+import { addDays, currentWeekDays, expandRecurringEvents, formatDay, formatLongDate, formatTime, isInCurrentWeek, toDateKey } from '../lib/date'
 import { useFamilyRoute } from '../routes/context'
 import { Card, EmptyState, Tag } from '../components/ui'
 
@@ -9,7 +9,7 @@ export const WeekPage = () => {
   const days = currentWeekDays()
   const [selectedKey, setSelectedKey] = useState(toDateKey(new Date()))
   const selectedDay = days.find((day) => toDateKey(day) === selectedKey) ?? days[0]
-  const weekEvents = data.events.filter((event) => isInCurrentWeek(event.starts_at))
+  const weekEvents = expandRecurringEvents(data.events, days[0], addDays(days[6], 1))
   const weekTasks = data.tasks.filter((task) => task.due_at && isInCurrentWeek(task.due_at) && task.status !== 'done')
   const selectedEvents = weekEvents.filter((event) => toDateKey(event.starts_at) === selectedKey)
   const selectedTasks = weekTasks.filter((task) => task.due_at && toDateKey(task.due_at) === selectedKey)

@@ -1,10 +1,13 @@
 import { useOutletContext } from 'react-router-dom'
 import type {
   DashboardData,
+  EmergencyItem,
   EventItem,
+  FamilyContact,
   FamilyLink,
   NoteItem,
   NotificationDelivery,
+  NavItemId,
   Role,
   ShoppingItem,
   TaskItem,
@@ -12,7 +15,16 @@ import type {
 
 export type CreateEventInput = Pick<
   EventItem,
-  'title' | 'starts_at' | 'ends_at' | 'all_day' | 'category' | 'location' | 'notes' | 'is_important' | 'notify_family'
+  | 'title'
+  | 'starts_at'
+  | 'ends_at'
+  | 'all_day'
+  | 'recurrence_rule'
+  | 'category'
+  | 'location'
+  | 'notes'
+  | 'is_important'
+  | 'notify_family'
 >
 
 export type CreateShoppingItemInput = Pick<ShoppingItem, 'title' | 'quantity' | 'unit' | 'category' | 'source_label'>
@@ -20,6 +32,16 @@ export type CreateShoppingItemInput = Pick<ShoppingItem, 'title' | 'quantity' | 
 export type CreateLinkInput = Pick<
   FamilyLink,
   'collection_id' | 'title' | 'url' | 'description' | 'favorite' | 'is_important' | 'notify_family'
+>
+
+export type CreateFamilyContactInput = Pick<
+  FamilyContact,
+  'name' | 'relation' | 'phone' | 'mobile' | 'email' | 'address' | 'notes' | 'favorite'
+>
+
+export type CreateEmergencyItemInput = Pick<
+  EmergencyItem,
+  'type' | 'title' | 'primary_text' | 'secondary_text' | 'phone' | 'address' | 'notes' | 'priority'
 >
 
 export interface InviteFamilyMemberInput {
@@ -43,11 +65,14 @@ export interface FamilyActions {
   clearShoppingList: (listId: string, checkedOnly: boolean) => Promise<void>
   resetDemoData?: () => Promise<void>
   createLink: (input: CreateLinkInput) => Promise<void>
+  createFamilyContact: (input: CreateFamilyContactInput) => Promise<void>
+  createEmergencyItem: (input: CreateEmergencyItemInput) => Promise<void>
   createNote: (
     input: Pick<NoteItem, 'title' | 'body' | 'category' | 'visibility' | 'is_important' | 'notify_family'>,
   ) => Promise<void>
   markNotificationRead: (delivery: NotificationDelivery) => Promise<void>
   addRecipeToShoppingList: (listId: string, recipeId: string) => Promise<void>
+  updateMembershipNavigation?: (userId: string, visibleNavItems: NavItemId[]) => Promise<void>
   inviteFamilyMember?: (input: InviteFamilyMemberInput) => Promise<void>
 }
 

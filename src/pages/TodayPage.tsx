@@ -1,16 +1,22 @@
 ﻿import { Bell, CalendarPlus, CheckCircle2, ShoppingCart } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { formatDay, formatTime, isToday, openTasks, sortByDate, tasksDueToday } from '../lib/date'
-import { getUpcomingWasteEvents, wasteColors } from '../lib/waste'
+import { expandRecurringEvents, formatDay, formatTime, openTasks, sortByDate, tasksDueToday } from '../lib/date'
+import { getUpcomingWasteEvents } from '../lib/waste'
 import { useFamilyRoute } from '../routes/context'
-import { Card, EmptyState, StatusDot, Tag } from '../components/ui'
+import { Card, EmptyState, Tag } from '../components/ui'
+import { WasteIcon } from '../components/WasteIcon'
 
 export const TodayPage = () => {
   const { data } = useFamilyRoute()
-  const todayEvents = sortByDate(data.events.filter((event) => isToday(event.starts_at))).slice(0, 6)
+  const now = new Date()
+  const todayStart = new Date(now)
+  todayStart.setHours(0, 0, 0, 0)
+  const todayEnd = new Date(now)
+  todayEnd.setHours(23, 59, 59, 999)
+  const todayEvents = sortByDate(expandRecurringEvents(data.events, todayStart, todayEnd)).slice(0, 6)
   const todayTasks = tasksDueToday(data.tasks).slice(0, 6)
   const urgentTasks = openTasks(data.tasks).filter((task) => task.is_important).slice(0, 4)
-  const nextWaste = getUpcomingWasteEvents(data.wasteEvents, new Date(), 4)
+  const nextWaste = getUpcomingWasteEvents(data.wasteEvents, now, 4)
   const shoppingList = data.shoppingLists[0]
   const shoppingItems = shoppingList
     ? data.shoppingItems.filter((item) => item.list_id === shoppingList.id && !item.checked).slice(0, 6)
@@ -100,7 +106,7 @@ export const TodayPage = () => {
         <div className="waste-strip">
           {nextWaste.map((event) => (
             <article key={event.id}>
-              <StatusDot color={wasteColors[event.waste_type]} />
+              <WasteIcon type={event.waste_type} />
               <strong>{event.title}</strong>
               <span>{formatDay(`${event.date}T06:00:00Z`)}</span>
             </article>

@@ -1,9 +1,12 @@
 ﻿import { useMemo, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from '../components/AppShell'
+import { VisibleRoute } from '../components/VisibleRoute'
 import { createDemoData } from './demoData'
 import { ActivitiesPage } from '../pages/ActivitiesPage'
 import { CalendarPage } from '../pages/CalendarPage'
+import { ContactsPage } from '../pages/ContactsPage'
+import { EmergencyPage } from '../pages/EmergencyPage'
 import { LinksPage } from '../pages/LinksPage'
 import { NotesPage } from '../pages/NotesPage'
 import { NotificationsPage } from '../pages/NotificationsPage'
@@ -15,7 +18,7 @@ import { TodayPage } from '../pages/TodayPage'
 import { WastePage } from '../pages/WastePage'
 import { WeekPage } from '../pages/WeekPage'
 import type { FamilyActions } from '../routes/context'
-import type { DashboardData, NoteItem, ShoppingItem, TaskItem } from '../types'
+import type { DashboardData, EmergencyItem, FamilyContact, NoteItem, ShoppingItem, TaskItem } from '../types'
 
 const newId = (prefix: string) =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto ? `${prefix}-${crypto.randomUUID()}` : `${prefix}-${Date.now()}`
@@ -38,7 +41,7 @@ export const DemoApp = () => {
               starts_at: input.starts_at,
               ends_at: input.ends_at,
               all_day: input.all_day,
-              recurrence_rule: null,
+              recurrence_rule: input.recurrence_rule,
               category: input.category,
               location: input.location,
               notes: input.notes,
@@ -165,6 +168,48 @@ export const DemoApp = () => {
           ],
         }))
       },
+      createFamilyContact: async (input) => {
+        setData((current) => ({
+          ...current,
+          contacts: [
+            {
+              id: newId('contact-demo'),
+              family_id: current.family.id,
+              name: input.name,
+              relation: input.relation,
+              phone: input.phone,
+              mobile: input.mobile,
+              email: input.email,
+              address: input.address,
+              notes: input.notes,
+              favorite: input.favorite,
+              created_by: 'demo-user',
+            } satisfies FamilyContact,
+            ...current.contacts,
+          ],
+        }))
+      },
+      createEmergencyItem: async (input) => {
+        setData((current) => ({
+          ...current,
+          emergencyItems: [
+            {
+              id: newId('emergency-demo'),
+              family_id: current.family.id,
+              type: input.type,
+              title: input.title,
+              primary_text: input.primary_text,
+              secondary_text: input.secondary_text,
+              phone: input.phone,
+              address: input.address,
+              notes: input.notes,
+              priority: input.priority,
+              created_by: 'demo-user',
+            } satisfies EmergencyItem,
+            ...current.emergencyItems,
+          ],
+        }))
+      },
       createNote: async (input) => {
         setData((current) => ({
           ...current,
@@ -217,6 +262,14 @@ export const DemoApp = () => {
           }
         })
       },
+      updateMembershipNavigation: async (userId, visibleNavItems) => {
+        setData((current) => ({
+          ...current,
+          memberships: current.memberships.map((entry) =>
+            entry.user_id === userId ? { ...entry, visible_nav_items: visibleNavItems } : entry,
+          ),
+        }))
+      },
     }),
     [],
   )
@@ -230,12 +283,14 @@ export const DemoApp = () => {
         <Route path="aufgaben" element={<TasksPage />} />
         <Route path="einkauf" element={<ShoppingPage />} />
         <Route path="links" element={<LinksPage />} />
-        <Route path="notizen" element={<NotesPage />} />
-        <Route path="abfall" element={<WastePage />} />
-        <Route path="rezepte" element={<RecipesPage />} />
-        <Route path="aktivitaeten" element={<ActivitiesPage />} />
-        <Route path="meldungen" element={<NotificationsPage />} />
-        <Route path="einstellungen" element={<SettingsPage />} />
+        <Route path="notizen" element={<VisibleRoute navId="notizen"><NotesPage /></VisibleRoute>} />
+        <Route path="abfall" element={<VisibleRoute navId="abfall"><WastePage /></VisibleRoute>} />
+        <Route path="rezepte" element={<VisibleRoute navId="rezepte"><RecipesPage /></VisibleRoute>} />
+        <Route path="aktivitaeten" element={<VisibleRoute navId="aktivitaeten"><ActivitiesPage /></VisibleRoute>} />
+        <Route path="meldungen" element={<VisibleRoute navId="meldungen"><NotificationsPage /></VisibleRoute>} />
+        <Route path="kontakte" element={<VisibleRoute navId="kontakte"><ContactsPage /></VisibleRoute>} />
+        <Route path="notfall" element={<VisibleRoute navId="notfall"><EmergencyPage /></VisibleRoute>} />
+        <Route path="einstellungen" element={<VisibleRoute navId="system"><SettingsPage /></VisibleRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

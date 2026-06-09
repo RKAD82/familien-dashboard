@@ -78,15 +78,19 @@ export const isInCurrentWeek = (value: string | Date) => {
 export const expandRecurringEvents = (events: EventItem[], from: Date, to: Date) =>
   events.flatMap((event) => {
     if (!event.recurrence_rule) {
-      return [event]
+      const startsAt = new Date(event.starts_at)
+      return startsAt >= from && startsAt < to ? [event] : []
     }
 
     const rule = rrulestr(`DTSTART:${toRRuleDate(event.starts_at)}\nRRULE:${event.recurrence_rule}`)
-    return rule.between(from, to, true).map((date) => ({
-      ...event,
-      id: `${event.id}-${date.toISOString()}`,
-      starts_at: date.toISOString(),
-    }))
+    return rule
+      .between(from, to, true)
+      .filter((date) => date < to)
+      .map((date) => ({
+        ...event,
+        id: `${event.id}-${date.toISOString()}`,
+        starts_at: date.toISOString(),
+      }))
   })
 
 const toRRuleDate = (value: string) => {

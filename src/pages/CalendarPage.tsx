@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { CalendarDays, Plus } from 'lucide-react'
-import { formatLongDate, formatTime, sortByDate, toDateKey } from '../lib/date'
+import { expandRecurringEvents, formatLongDate, formatTime, sortByDate, toDateKey } from '../lib/date'
 import { useFamilyRoute } from '../routes/context'
 import { Button, Card, EmptyState, Field, Select, Tag, TextArea, TextInput } from '../components/ui'
 
@@ -18,10 +18,12 @@ export const CalendarPage = () => {
   const [category, setCategory] = useState('Familie')
   const [location, setLocation] = useState('')
   const [notes, setNotes] = useState('')
+  const [repeatWeekly, setRepeatWeekly] = useState(false)
   const [important, setImportant] = useState(false)
   const [notify, setNotify] = useState(false)
   const year = Number(selectedDate.slice(0, 4))
-  const selectedEvents = sortByDate(data.events.filter((event) => toDateKey(event.starts_at) === selectedDate))
+  const yearEvents = expandRecurringEvents(data.events, new Date(year, 0, 1), new Date(year + 1, 0, 1))
+  const selectedEvents = sortByDate(yearEvents.filter((event) => toDateKey(event.starts_at) === selectedDate))
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -34,6 +36,7 @@ export const CalendarPage = () => {
       starts_at: localDateTimeToIso(selectedDate, allDay ? '09:00' : startTime || '09:00'),
       ends_at: !allDay && endTime ? localDateTimeToIso(selectedDate, endTime) : null,
       all_day: allDay,
+      recurrence_rule: repeatWeekly ? 'FREQ=WEEKLY' : null,
       category,
       location: location.trim() || null,
       notes: notes.trim() || null,
@@ -45,6 +48,7 @@ export const CalendarPage = () => {
     setEndTime('')
     setLocation('')
     setNotes('')
+    setRepeatWeekly(false)
     setImportant(false)
     setNotify(false)
   }
@@ -77,6 +81,10 @@ export const CalendarPage = () => {
           <label className="check-line">
             <input type="checkbox" checked={allDay} onChange={(event) => setAllDay(event.target.checked)} />
             Ganztägig
+          </label>
+          <label className="check-line">
+            <input type="checkbox" checked={repeatWeekly} onChange={(event) => setRepeatWeekly(event.target.checked)} />
+            Jede Woche an diesem Wochentag anzeigen
           </label>
           <Field label="Kategorie">
             <Select value={category} onChange={(event) => setCategory(event.target.value)}>
@@ -130,7 +138,7 @@ export const CalendarPage = () => {
 
       <div className="year-grid span-3">
         {months.map((month) => {
-          const monthEvents = data.events.filter((event) => {
+          const monthEvents = yearEvents.filter((event) => {
             const date = new Date(event.starts_at)
             return date.getFullYear() === year && date.getMonth() === month
           })

@@ -1,40 +1,144 @@
-﻿import {
-  Bell,
-  CalendarDays,
-  CheckSquare,
-  ChefHat,
-  Home,
-  Link as LinkIcon,
-  ListChecks,
-  LogOut,
-  Map,
-  Menu,
-  Recycle,
-  Settings,
-  StickyNote,
-  X,
-} from 'lucide-react'
-import { useState } from 'react'
+import { Bell, CalendarDays, ChevronDown, CloudSun, LogOut, Menu, Plus, Search, UserRound, X } from 'lucide-react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { addDays, formatDay, startOfWeek, toDateKey } from '../lib/date'
+import { isNavItemVisible, mobileNavItemIds, navigationItems } from '../navigation'
 import { useAuth } from '../hooks/useAuth'
 import type { FamilyActions } from '../routes/context'
-import type { DashboardData } from '../types'
+import type { DashboardData, FamilyMembership } from '../types'
 import { Button } from './ui'
 
-const navigation = [
-  { path: '/', label: 'Heute', icon: Home },
-  { path: '/woche', label: 'Woche', icon: CalendarDays },
-  { path: '/kalender', label: 'Kalender', icon: CalendarDays },
-  { path: '/aufgaben', label: 'Aufgaben', icon: CheckSquare },
-  { path: '/einkauf', label: 'Einkauf', icon: ListChecks },
-  { path: '/links', label: 'Links', icon: LinkIcon },
-  { path: '/notizen', label: 'Notizen', icon: StickyNote },
-  { path: '/abfall', label: 'Abfall', icon: Recycle },
-  { path: '/rezepte', label: 'Rezepte', icon: ChefHat },
-  { path: '/aktivitaeten', label: 'Aktivitäten', icon: Map },
-  { path: '/meldungen', label: 'Meldungen', icon: Bell },
-  { path: '/einstellungen', label: 'System', icon: Settings },
-]
+const weatherLabels: Record<number, string> = {
+  0: 'Klar',
+  1: 'Leicht bewölkt',
+  2: 'Bewölkt',
+  3: 'Bedeckt',
+  45: 'Nebel',
+  48: 'Nebel',
+  51: 'Nieselregen',
+  53: 'Nieselregen',
+  55: 'Nieselregen',
+  61: 'Regen',
+  63: 'Regen',
+  65: 'Starker Regen',
+  71: 'Schnee',
+  73: 'Schnee',
+  75: 'Starker Schnee',
+  80: 'Schauer',
+  81: 'Schauer',
+  82: 'Starke Schauer',
+  95: 'Gewitter',
+}
+
+const usePulheimWeather = () => {
+  const [weather, setWeather] = useState<{ temperature: number; label: string } | null>(null)
+
+  useEffect(() => {
+    let active = true
+    const controller = new AbortController()
+
+    const load = async () => {
+      try {
+        const response = await fetch(
+          'https://api.open-meteo.com/v1/forecast?latitude=50.9997&longitude=6.8063&current=temperature_2m,weather_code&timezone=Europe%2FBerlin',
+          { signal: controller.signal },
+        )
+        if (!response.ok) {
+          return
+        }
+        const payload = (await response.json()) as { current?: { temperature_2m?: number; weather_code?: number } }
+        if (!active || typeof payload.current?.temperature_2m !== 'number') {
+          return
+        }
+        setWeather({
+          temperature: Math.round(payload.current.temperature_2m),
+          label: weatherLabels[payload.current.weather_code ?? 0] ?? 'Aktuell',
+        })
+      } catch {
+        if (active) {
+          setWeather(null)
+        }
+      }
+    }
+
+    void load()
+
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [])
+
+  return weather
+}
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('')
+
+const avatarPalette = ['#d7897f', '#f9b95c', '#96c7b3', '#6398a9', '#8a6f5f']
+
+const avatarColor = (member: FamilyMembership | null | undefined) => {
+  const configured = member?.notification_preferences?.avatarColor
+  if (typeof configured === 'string') {
+    return configured
+  }
+  const seed = member?.display_name ?? member?.user_id ?? 'Familie'
+  const index = [...seed].reduce((total, char) => total + char.charCodeAt(0), 0) % avatarPalette.length
+  return avatarPalette[index]
+}
+
+const PhotoAvatar = ({ member, large = false }: { member?: FamilyMembership | null; large?: boolean }) => {
+  const name = member?.display_name ?? 'Familie'
+  return (
+    <span
+      className={`photo-avatar ${large ? 'photo-avatar-large' : ''}`}
+      style={{ '--avatar-color': avatarColor(member) } as CSSProperties}
+      title={name}
+    >
+      {initials(name) || <UserRound size={large ? 22 : 14} />}
+    </span>
+  )
+}
+
+const WeekRail = () => {
+  const start = startOfWeek()
+  const today = toDateKey(new Date())
+  const days = Array.from({ length: 7 }, (_, index) => addDays(start, index))
+
+  return (
+    <section className="week-rail" aria-label="Wochenübersicht">
+      <div className="week-rail-header">
+        <h2>Woche</h2>
+        <div>
+          <Button variant="ghost">
+            Diese Woche
+          </Button>
+          <Button variant="ghost" aria-label="Kalender öffnen">
+            <CalendarDays size={17} />
+          </Button>
+        </div>
+      </div>
+      <div className="week-rail-days">
+        {days.map((day) => {
+          const key = toDateKey(day)
+          const [weekday, date] = formatDay(day).split(', ')
+          return (
+            <NavLink key={key} to="/woche" className={key === today ? 'today' : ''}>
+              <span>{weekday}</span>
+              <strong>{date?.slice(0, 2) ?? day.getDate()}</strong>
+              <small>{date?.slice(3) ?? ''}</small>
+            </NavLink>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
 
 export const AppShell = ({
   data,
@@ -45,22 +149,31 @@ export const AppShell = ({
   actions: FamilyActions
   modeLabel?: string
 }) => {
-  const { profile, signOut } = useAuth()
+  const { signOut, user, membership } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const weather = usePulheimWeather()
   const unread = data.notificationDeliveries.filter((delivery) => delivery.status !== 'read').length
+  const activeMembers = data.memberships.filter((entry) => entry.active)
+  const currentMembership =
+    activeMembers.find((entry) => entry.user_id === user?.id) ?? membership ?? activeMembers[0] ?? null
+  const visibleNavigation = navigationItems.filter((item) => isNavItemVisible(currentMembership, item))
+  const mobileNavigation = mobileNavItemIds
+    .map((id) => visibleNavigation.find((item) => item.id === id))
+    .filter((item): item is (typeof visibleNavigation)[number] => Boolean(item))
 
   return (
     <div className="app-shell">
       <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
         <div className="brand">
-          <div className="brand-mark">FD</div>
+          <PhotoAvatar member={currentMembership} large />
           <div>
-            <strong>{data.family.name}</strong>
-            <span>{profile?.display_name ?? 'Familie'}</span>
+            <strong>Familien-Dashboard</strong>
+            <span>{data.family.name}</span>
           </div>
+          <ChevronDown size={16} />
         </div>
-        <nav className="nav-list">
-          {navigation.map((item) => {
+        <nav className="nav-list" aria-label="Hauptnavigation">
+          {visibleNavigation.map((item) => {
             const Icon = item.icon
             return (
               <NavLink key={item.path} to={item.path} onClick={() => setMobileOpen(false)}>
@@ -71,6 +184,24 @@ export const AppShell = ({
             )
           })}
         </nav>
+        <div className="sidebar-family-panel">
+          <div className="sidebar-family-header">
+            <span>Familie</span>
+            <NavLink to="/einstellungen" aria-label="Mitglied einladen">
+              <Plus size={15} />
+            </NavLink>
+          </div>
+          <div className="sidebar-photo-row">
+            {activeMembers.slice(0, 5).map((member) => (
+              <PhotoAvatar key={member.user_id} member={member} />
+            ))}
+          </div>
+          <div className="weather-widget">
+            <CloudSun size={22} />
+            <strong>{weather ? `${weather.temperature}°` : '--°'}</strong>
+            <span>Pulheim<br />{weather?.label ?? 'Wetter lädt'}</span>
+          </div>
+        </div>
         <Button variant="ghost" onClick={signOut}>
           <LogOut size={18} />
           Abmelden
@@ -80,7 +211,7 @@ export const AppShell = ({
         <Button variant="ghost" aria-label="Navigation öffnen" onClick={() => setMobileOpen((value) => !value)}>
           {mobileOpen ? <X size={20} /> : <Menu size={20} />}
         </Button>
-        <strong>{data.family.name}</strong>
+        <strong>Familien-Dashboard</strong>
         <NavLink to="/meldungen" className="mobile-bell" aria-label="Meldungen">
           <Bell size={20} />
           {unread > 0 && <em>{unread}</em>}
@@ -88,10 +219,22 @@ export const AppShell = ({
       </header>
       <main className="main-content">
         {modeLabel && <div className="demo-banner">{modeLabel}</div>}
+        <div className="app-topline">
+          <div className="search-shell">
+            <Search size={17} />
+            <span>Suchen...</span>
+          </div>
+          <NavLink to="/meldungen" className="topline-icon" aria-label="Meldungen">
+            <Bell size={19} />
+            {unread > 0 && <em>{unread}</em>}
+          </NavLink>
+          <PhotoAvatar member={currentMembership} />
+        </div>
+        <WeekRail />
         <Outlet context={{ data, actions }} />
       </main>
       <nav className="bottom-nav">
-        {navigation.slice(0, 5).map((item) => {
+        {mobileNavigation.map((item) => {
           const Icon = item.icon
           return (
             <NavLink key={item.path} to={item.path}>

@@ -14,10 +14,10 @@ const json = (body: unknown, status = 200) =>
   })
 
 const getServiceKey = () => {
-  const explicit = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  const explicit = Deno.env.get('PROJECT_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
   if (explicit) return explicit
   const secretKeys = Deno.env.get('SUPABASE_SECRET_KEYS')
-  if (!secretKeys) throw new Error('SUPABASE_SERVICE_ROLE_KEY oder SUPABASE_SECRET_KEYS fehlt.')
+  if (!secretKeys) throw new Error('PROJECT_SERVICE_ROLE_KEY oder SUPABASE_SECRET_KEYS fehlt.')
   return JSON.parse(secretKeys).default
 }
 
@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
     return json({ error: 'method_not_allowed' }, 405)
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')
+  const supabaseUrl = Deno.env.get('PROJECT_SUPABASE_URL') ?? Deno.env.get('SUPABASE_URL')
   if (!supabaseUrl) {
     return json({ error: 'missing_supabase_url' }, 500)
   }

@@ -1,6 +1,7 @@
 ﻿import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/AppShell'
 import { LoginGate } from './components/LoginGate'
+import { VisibleRoute } from './components/VisibleRoute'
 import { Card } from './components/ui'
 import { hasSupabaseConfig } from './config'
 import { DemoApp } from './demo/DemoApp'
@@ -8,6 +9,8 @@ import { useAuth } from './hooks/useAuth'
 import { useFamilyData } from './hooks/useFamilyData'
 import { ActivitiesPage } from './pages/ActivitiesPage'
 import { CalendarPage } from './pages/CalendarPage'
+import { ContactsPage } from './pages/ContactsPage'
+import { EmergencyPage } from './pages/EmergencyPage'
 import { LinksPage } from './pages/LinksPage'
 import { NotesPage } from './pages/NotesPage'
 import { NotificationsPage } from './pages/NotificationsPage'
@@ -57,12 +60,14 @@ const AuthenticatedApp = () => {
         <Route path="aufgaben" element={<TasksPage />} />
         <Route path="einkauf" element={<ShoppingPage />} />
         <Route path="links" element={<LinksPage />} />
-        <Route path="notizen" element={<NotesPage />} />
-        <Route path="abfall" element={<WastePage />} />
-        <Route path="rezepte" element={<RecipesPage />} />
-        <Route path="aktivitaeten" element={<ActivitiesPage />} />
-        <Route path="meldungen" element={<NotificationsPage />} />
-        <Route path="einstellungen" element={<SettingsPage />} />
+        <Route path="notizen" element={<VisibleRoute navId="notizen"><NotesPage /></VisibleRoute>} />
+        <Route path="abfall" element={<VisibleRoute navId="abfall"><WastePage /></VisibleRoute>} />
+        <Route path="rezepte" element={<VisibleRoute navId="rezepte"><RecipesPage /></VisibleRoute>} />
+        <Route path="aktivitaeten" element={<VisibleRoute navId="aktivitaeten"><ActivitiesPage /></VisibleRoute>} />
+        <Route path="meldungen" element={<VisibleRoute navId="meldungen"><NotificationsPage /></VisibleRoute>} />
+        <Route path="kontakte" element={<VisibleRoute navId="kontakte"><ContactsPage /></VisibleRoute>} />
+        <Route path="notfall" element={<VisibleRoute navId="notfall"><EmergencyPage /></VisibleRoute>} />
+        <Route path="einstellungen" element={<VisibleRoute navId="system"><SettingsPage /></VisibleRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

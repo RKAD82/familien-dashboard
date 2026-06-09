@@ -1,4 +1,6 @@
-﻿const readEnv = (key: string) => import.meta.env[key] as string | undefined
+const readEnv = (key: string) => import.meta.env[key] as string | undefined
+
+const demoMode = readEnv('VITE_DEMO_MODE') === 'true'
 
 export const appConfig = {
   supabaseUrl: readEnv('VITE_SUPABASE_URL') ?? '',
@@ -8,6 +10,6 @@ export const appConfig = {
   timezone: 'Europe/Berlin',
 }
 
-export const hasSupabaseConfig = Boolean(appConfig.supabaseUrl && appConfig.supabaseAnonKey)
+export const hasSupabaseConfig = !demoMode && Boolean(appConfig.supabaseUrl && appConfig.supabaseAnonKey)
 
 export const publicBasePath = appConfig.basePath.endsWith('/') ? appConfig.basePath : `${appConfig.basePath}/`
