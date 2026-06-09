@@ -19,13 +19,15 @@ export const RecipesPage = () => {
   const [addedRecipeId, setAddedRecipeId] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const list = data.shoppingLists[0]
-  const suggestedRecipeIds = data.recipeSuggestions.map((suggestion) => suggestion.recipe_id)
+  const activeRecipeSuggestions = data.recipeSuggestions.filter((suggestion) => suggestion.status !== 'archived')
+  const archivedRecipeSuggestions = data.recipeSuggestions.filter((suggestion) => suggestion.status === 'archived')
+  const suggestedRecipeIds = activeRecipeSuggestions.map((suggestion) => suggestion.recipe_id)
   const activeRecipes = data.recipes.filter((recipe) => recipe.status !== 'archived')
   const archivedRecipes = data.recipes.filter((recipe) => recipe.status === 'archived')
   const recipeRuns = data.activityAgentRuns.filter((run) => run.run_type === 'recipes')
   const lastRun = recipeRuns[0]
   const suggestions =
-    data.recipeSuggestions.length > 0
+    activeRecipeSuggestions.length > 0
       ? activeRecipes.filter((recipe) => suggestedRecipeIds.includes(recipe.id))
       : generateRecipeSuggestions(activeRecipes)
   const coverageOk = vegetarianCoverageOk(suggestions)
@@ -125,6 +127,21 @@ export const RecipesPage = () => {
                 <button type="button" onClick={() => void actions.archiveRecipe(recipe.id, false)}>Zurückholen</button>
               </article>
             ))}
+          </div>
+        </Card>
+      )}
+      {archivedRecipeSuggestions.length > 0 && (
+        <Card title="Archivierte Wochenvorschläge">
+          <div className="compact-list">
+            {archivedRecipeSuggestions.map((suggestion) => {
+              const recipe = suggestion.recipe ?? data.recipes.find((entry) => entry.id === suggestion.recipe_id)
+              return (
+                <article key={suggestion.id}>
+                  <strong>{recipe?.title ?? 'Rezeptvorschlag'}</strong>
+                  <span>{suggestion.suggestion_week} · {suggestion.reason}</span>
+                </article>
+              )
+            })}
           </div>
         </Card>
       )}

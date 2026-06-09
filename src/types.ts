@@ -264,6 +264,8 @@ export interface RecipeSuggestion {
   reason: string
   status: 'suggested' | 'planned' | 'dismissed' | 'archived'
   generated_by: 'seed-generator' | 'manual'
+  created_at?: string
+  expires_at?: string | null
   recipe?: Recipe
 }
 

@@ -399,16 +399,16 @@ export const SettingsPage = () => {
             <ShieldCheck size={22} />
             <strong>Aktivitäten</strong>
             <span>
-              {data.activitySuggestions.length} Vorschläge, davon {activitiesWithSource} mit Link. Aktualisieren lädt aktuell nur
-              Supabase-Daten neu.
+              {data.activitySuggestions.length} Vorschläge, davon {activitiesWithSource} mit Link. Automatik läuft täglich und archiviert
+              abgelaufene Einträge.
             </span>
-            <Tag tone="warn">keine automatische Internetsuche</Tag>
+            <Tag tone="good">täglich geplant</Tag>
           </article>
           <article>
             <ShieldCheck size={22} />
             <strong>Rezepte</strong>
-            <span>Rezepte kommen aktuell aus Seed- oder Familiendaten und werden nicht automatisch neu generiert.</span>
-            <Tag tone="neutral">manuell / Seed</Tag>
+            <span>Rezepte werden aus aktiven Familiendaten wöchentlich neu vorgeschlagen. Alte Wochenvorschläge werden archiviert.</span>
+            <Tag tone="good">montags geplant</Tag>
           </article>
           <article>
             <ShieldCheck size={22} />
