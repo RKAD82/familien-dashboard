@@ -13,13 +13,19 @@ interface AuthState {
   loading: boolean
   configured: boolean
   passwordRecovery: boolean
-  signIn: (email: string, password: string) => Promise<void>
+  signIn: (login: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   resetPasswordForEmail: (email: string) => Promise<void>
   updatePassword: (password: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthState | null>(null)
+
+const normalizeLoginIdentifier = (value: string) => {
+  const trimmed = value.trim().toLowerCase()
+  if (trimmed.includes('@')) return trimmed
+  return `${trimmed.replace(/[^a-z0-9._-]/g, '-')}@familie.local`
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null)
@@ -115,12 +121,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       loading,
       configured: hasSupabaseConfig,
       passwordRecovery,
-      signIn: async (email: string, password: string) => {
+      signIn: async (login: string, password: string) => {
         if (!supabase) {
           throw new Error('Supabase ist nicht konfiguriert.')
         }
 
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        const { error } = await supabase.auth.signInWithPassword({ email: normalizeLoginIdentifier(login), password })
         if (error) {
           throw error
         }

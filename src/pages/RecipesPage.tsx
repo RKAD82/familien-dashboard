@@ -9,10 +9,12 @@ export const RecipesPage = () => {
   const [addedRecipeId, setAddedRecipeId] = useState<string | null>(null)
   const list = data.shoppingLists[0]
   const suggestedRecipeIds = data.recipeSuggestions.map((suggestion) => suggestion.recipe_id)
+  const activeRecipes = data.recipes.filter((recipe) => recipe.status !== 'archived')
+  const archivedRecipes = data.recipes.filter((recipe) => recipe.status === 'archived')
   const suggestions =
     data.recipeSuggestions.length > 0
-      ? data.recipes.filter((recipe) => suggestedRecipeIds.includes(recipe.id))
-      : generateRecipeSuggestions(data.recipes)
+      ? activeRecipes.filter((recipe) => suggestedRecipeIds.includes(recipe.id))
+      : generateRecipeSuggestions(activeRecipes)
   const coverageOk = vegetarianCoverageOk(suggestions)
 
   return (
@@ -68,6 +70,9 @@ export const RecipesPage = () => {
                   {wasAdded ? <Check size={18} /> : <ShoppingCart size={18} />}
                   {wasAdded ? 'Übernommen' : 'Zutaten in Einkauf'}
                 </Button>
+                <Button variant="ghost" onClick={() => void actions.archiveRecipe(recipe.id, true)}>
+                  Archivieren
+                </Button>
                 {wasAdded && <div className="recipe-feedback">Zutaten wurden in den Einkauf übernommen.</div>}
               </article>
             </Card>
@@ -75,6 +80,18 @@ export const RecipesPage = () => {
         })}
         {!suggestions.length && <EmptyState title="Keine Rezepte" body="Seed-Daten müssen erst in Supabase geladen werden." />}
       </div>
+      {archivedRecipes.length > 0 && (
+        <Card title="Rezept-Archiv">
+          <div className="compact-list">
+            {archivedRecipes.map((recipe) => (
+              <article key={recipe.id}>
+                <strong>{recipe.title}</strong>
+                <button type="button" onClick={() => void actions.archiveRecipe(recipe.id, false)}>Zurückholen</button>
+              </article>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   )
 }

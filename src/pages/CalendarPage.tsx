@@ -21,9 +21,11 @@ export const CalendarPage = () => {
   const [repeatWeekly, setRepeatWeekly] = useState(false)
   const [important, setImportant] = useState(false)
   const [notify, setNotify] = useState(false)
+  const [editingEventId, setEditingEventId] = useState<string | null>(null)
   const year = Number(selectedDate.slice(0, 4))
   const yearEvents = expandRecurringEvents(data.events, new Date(year, 0, 1), new Date(year + 1, 0, 1))
   const selectedEvents = sortByDate(yearEvents.filter((event) => toDateKey(event.starts_at) === selectedDate))
+  const editingEvent = editingEventId ? data.events.find((event) => event.id === editingEventId) ?? null : null
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -31,7 +33,7 @@ export const CalendarPage = () => {
       return
     }
 
-    await actions.createEvent({
+    const payload = {
       title: title.trim(),
       starts_at: localDateTimeToIso(selectedDate, allDay ? '09:00' : startTime || '09:00'),
       ends_at: !allDay && endTime ? localDateTimeToIso(selectedDate, endTime) : null,
@@ -42,7 +44,13 @@ export const CalendarPage = () => {
       notes: notes.trim() || null,
       is_important: important,
       notify_family: notify,
-    })
+    }
+
+    if (editingEvent) {
+      await actions.updateEvent(editingEvent, payload)
+    } else {
+      await actions.createEvent(payload)
+    }
 
     setTitle('')
     setEndTime('')
@@ -51,6 +59,34 @@ export const CalendarPage = () => {
     setRepeatWeekly(false)
     setImportant(false)
     setNotify(false)
+    setEditingEventId(null)
+  }
+
+  const startEditEvent = (eventId: string) => {
+    const source = data.events.find((event) => event.id === eventId)
+    if (!source) return
+    const start = new Date(source.starts_at)
+    const end = source.ends_at ? new Date(source.ends_at) : null
+    setEditingEventId(source.id)
+    setSelectedDate(toDateKey(source.starts_at))
+    setTitle(source.title)
+    setStartTime(start.toTimeString().slice(0, 5))
+    setEndTime(end ? end.toTimeString().slice(0, 5) : '')
+    setAllDay(source.all_day)
+    setCategory(source.category)
+    setLocation(source.location ?? '')
+    setNotes(source.notes ?? '')
+    setRepeatWeekly(Boolean(source.recurrence_rule))
+    setImportant(source.is_important)
+    setNotify(source.notify_family)
+  }
+
+  const deleteEvent = async (eventId: string) => {
+    const source = data.events.find((event) => event.id === eventId)
+    if (!source) return
+    if (window.confirm(`Termin "${source.title}" wirklich löschen?`)) {
+      await actions.deleteEvent(source)
+    }
   }
 
   return (
@@ -111,8 +147,13 @@ export const CalendarPage = () => {
           </label>
           <Button type="submit">
             <Plus size={18} />
-            Termin speichern
+            {editingEvent ? 'Termin ändern' : 'Termin speichern'}
           </Button>
+          {editingEvent && (
+            <Button variant="ghost" onClick={() => setEditingEventId(null)}>
+              Bearbeitung abbrechen
+            </Button>
+          )}
         </form>
       </Card>
 
@@ -128,6 +169,14 @@ export const CalendarPage = () => {
                   {event.notes && <small>{event.notes}</small>}
                 </div>
                 {event.is_important && <Tag tone="warn">wichtig</Tag>}
+                <div className="inline-actions">
+                  <button type="button" onClick={() => startEditEvent(data.events.find((source) => event.id.startsWith(source.id))?.id ?? event.id)}>
+                    Bearbeiten
+                  </button>
+                  <button type="button" onClick={() => void deleteEvent(data.events.find((source) => event.id.startsWith(source.id))?.id ?? event.id)}>
+                    Löschen
+                  </button>
+                </div>
               </article>
             ))}
           </div>

@@ -28,10 +28,12 @@ const MemberAdminCard = ({
   onReset: (member: FamilyMembership) => Promise<void>
   onSave: (
     member: FamilyMembership,
-    input: { display_name: string; role: Role; active: boolean; visible_nav_items: NavItemId[] },
+    input: { display_name: string; role: Role; active: boolean; visible_nav_items: NavItemId[]; login_name?: string; password?: string },
   ) => Promise<void>
 }) => {
   const [displayName, setDisplayName] = useState(member.display_name)
+  const [loginName, setLoginName] = useState(member.login_name ?? '')
+  const [newPassword, setNewPassword] = useState('')
   const [role, setRole] = useState<Role>(member.role)
   const [active, setActive] = useState(member.active)
   const [visible, setVisible] = useState(() => new Set(visibleNavIdsForMembership(member)))
@@ -43,14 +45,9 @@ const MemberAdminCard = ({
   const toggleNav = (navId: NavItemId, checked: boolean) => {
     setVisible((current) => {
       const next = new Set(current)
-      if (checked) {
-        next.add(navId)
-      } else {
-        next.delete(navId)
-      }
-      if (role === 'admin') {
-        next.add('system')
-      }
+      if (checked) next.add(navId)
+      else next.delete(navId)
+      if (role === 'admin') next.add('system')
       return next
     })
   }
@@ -60,16 +57,17 @@ const MemberAdminCard = ({
     setMessage(null)
     setSaving(true)
     const nextVisible = new Set(visible)
-    if (role === 'admin') {
-      nextVisible.add('system')
-    }
+    if (role === 'admin') nextVisible.add('system')
     try {
       await onSave(member, {
         display_name: displayName.trim() || member.display_name,
+        login_name: loginName.trim() || undefined,
+        password: newPassword || undefined,
         role,
         active,
         visible_nav_items: uniqueNavItems([...nextVisible]),
       })
+      setNewPassword('')
       setMessage('Gespeichert.')
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Mitglied konnte nicht gespeichert werden.')
@@ -97,7 +95,7 @@ const MemberAdminCard = ({
       <div className="member-admin-header">
         <div>
           <strong>{member.display_name}</strong>
-          <span>{member.email ?? 'Keine E-Mail im Profil'}</span>
+          <span>{member.login_name ? `Login: ${member.login_name}` : member.email ?? 'Kein Loginname'}</span>
         </div>
         <Tag tone={isCurrentUser ? 'good' : member.active ? 'info' : 'neutral'}>
           {isCurrentUser ? 'Du' : member.active ? 'aktiv' : 'inaktiv'}
@@ -108,6 +106,11 @@ const MemberAdminCard = ({
         <Field label="Name">
           <TextInput disabled={!canManage || saving} value={displayName} onChange={(event) => setDisplayName(event.target.value)} />
         </Field>
+        <Field label="Loginname">
+          <TextInput disabled={!canManage || saving} value={loginName} onChange={(event) => setLoginName(event.target.value)} />
+        </Field>
+      </div>
+      <div className="two-column-fields">
         <Field label="Rolle">
           <Select disabled={!canManage || saving} value={role} onChange={(event) => setRole(event.target.value as Role)}>
             {(['adult', 'child', 'admin'] as Role[]).map((entry) => (
@@ -117,15 +120,20 @@ const MemberAdminCard = ({
             ))}
           </Select>
         </Field>
+        <Field label="Neues Passwort">
+          <TextInput
+            disabled={!canManage || saving}
+            minLength={8}
+            placeholder="leer lassen = unverändert"
+            type="password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+          />
+        </Field>
       </div>
 
       <label className="member-active-toggle">
-        <input
-          checked={active}
-          disabled={!canManage || saving || isCurrentUser}
-          type="checkbox"
-          onChange={(event) => setActive(event.target.checked)}
-        />
+        <input checked={active} disabled={!canManage || saving || isCurrentUser} type="checkbox" onChange={(event) => setActive(event.target.checked)} />
         <span>Mitglied aktiv</span>
       </label>
 
@@ -154,7 +162,7 @@ const MemberAdminCard = ({
           <Save size={17} />
           Speichern
         </Button>
-        <Button disabled={!canManage || saving || !member.email} type="button" variant="secondary" onClick={() => void sendReset()}>
+        <Button disabled={!canManage || saving || !member.email || member.email.endsWith('@familie.local')} type="button" variant="secondary" onClick={() => void sendReset()}>
           <Mail size={17} />
           Reset-Mail
         </Button>
@@ -170,18 +178,18 @@ export const SettingsPage = () => {
   const [passwordRepeat, setPasswordRepeat] = useState('')
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteName, setInviteName] = useState('')
-  const [inviteRole, setInviteRole] = useState<Role>('adult')
-  const [inviteMessage, setInviteMessage] = useState<string | null>(null)
-  const [inviteError, setInviteError] = useState<string | null>(null)
+  const [newEmail, setNewEmail] = useState('')
+  const [newName, setNewName] = useState('')
+  const [newLoginName, setNewLoginName] = useState('')
+  const [newUserPassword, setNewUserPassword] = useState('')
+  const [newRole, setNewRole] = useState<Role>('adult')
+  const [userMessage, setUserMessage] = useState<string | null>(null)
+  const [userError, setUserError] = useState<string | null>(null)
 
   const activeMembers = data.memberships.filter((entry) => entry.active)
-  const currentMembership =
-    activeMembers.find((entry) => entry.user_id === user?.id) ?? membership ?? activeMembers[0] ?? null
+  const currentMembership = activeMembers.find((entry) => entry.user_id === user?.id) ?? membership ?? activeMembers[0] ?? null
   const isAdmin = currentMembership?.role === 'admin'
-  const canInvite = Boolean(configured && isAdmin && actions.inviteFamilyMember)
-  const canManageMembers = Boolean(configured && isAdmin && actions.updateFamilyMember)
+  const canManageMembers = Boolean(configured && isAdmin && actions.manageFamilyMember)
   const district = data.wasteDistricts[0]
   const activitiesWithSource = data.activitySuggestions.filter((activity) => activity.url).length
   const pushReady = Boolean(appConfig.vapidPublicKey)
@@ -190,7 +198,6 @@ export const SettingsPage = () => {
     event.preventDefault()
     setPasswordError(null)
     setPasswordMessage(null)
-
     if (password.length < 8) {
       setPasswordError('Das neue Passwort muss mindestens 8 Zeichen haben.')
       return
@@ -199,7 +206,6 @@ export const SettingsPage = () => {
       setPasswordError('Die Passwörter stimmen nicht überein.')
       return
     }
-
     try {
       await updatePassword(password)
       setPassword('')
@@ -210,48 +216,59 @@ export const SettingsPage = () => {
     }
   }
 
-  const onInviteSubmit = async (event: FormEvent) => {
+  const onCreateUserSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    setInviteError(null)
-    setInviteMessage(null)
-
-    if (!actions.inviteFamilyMember) {
-      setInviteError('Die Einladungsfunktion ist in dieser Umgebung nicht aktiv.')
+    setUserError(null)
+    setUserMessage(null)
+    if (!actions.manageFamilyMember) {
+      setUserError('Direkte Nutzeranlage ist nicht aktiv.')
       return
     }
-
+    if (!newName.trim() || !newLoginName.trim() || newUserPassword.length < 8) {
+      setUserError('Bitte Name, Loginname und Passwort mit mindestens 8 Zeichen eintragen.')
+      return
+    }
     try {
-      await actions.inviteFamilyMember({
-        email: inviteEmail.trim(),
-        display_name: inviteName.trim(),
-        role: inviteRole,
+      await actions.manageFamilyMember({
+        login_name: newLoginName.trim(),
+        email: newEmail.trim() || null,
+        display_name: newName.trim(),
+        password: newUserPassword,
+        role: newRole,
+        active: true,
+        visible_nav_items: uniqueNavItems(navigationItems.filter((item) => item.defaultVisible || item.id === 'system').map((item) => item.id)),
       })
-      setInviteMessage(`Einladung für ${inviteEmail.trim()} wurde vorbereitet. Bitte auch den Junk-Ordner prüfen.`)
-      setInviteEmail('')
-      setInviteName('')
-      setInviteRole('adult')
+      setUserMessage(`Nutzer ${newLoginName.trim()} wurde angelegt.`)
+      setNewEmail('')
+      setNewName('')
+      setNewLoginName('')
+      setNewUserPassword('')
+      setNewRole('adult')
     } catch (error) {
-      setInviteError(error instanceof Error ? error.message : 'Einladung konnte nicht verschickt werden.')
+      setUserError(error instanceof Error ? error.message : 'Nutzer konnte nicht angelegt werden.')
     }
   }
 
   const saveMember = async (
     member: FamilyMembership,
-    input: { display_name: string; role: Role; active: boolean; visible_nav_items: NavItemId[] },
+    input: { display_name: string; role: Role; active: boolean; visible_nav_items: NavItemId[]; login_name?: string; password?: string },
   ) => {
-    if (!actions.updateFamilyMember) {
-      throw new Error('Nutzerverwaltung ist in dieser Umgebung nicht aktiv.')
-    }
-    await actions.updateFamilyMember(member.user_id, input)
+    if (!actions.manageFamilyMember) throw new Error('Nutzerverwaltung ist in dieser Umgebung nicht aktiv.')
+    await actions.manageFamilyMember({
+      user_id: member.user_id,
+      email: member.email ?? null,
+      display_name: input.display_name,
+      login_name: input.login_name,
+      password: input.password,
+      role: input.role,
+      active: input.active,
+      visible_nav_items: input.visible_nav_items,
+    })
   }
 
   const sendResetMail = async (member: FamilyMembership) => {
-    if (!member.email) {
-      throw new Error('Für dieses Mitglied ist keine E-Mail im Profil gespeichert.')
-    }
-    if (!actions.sendPasswordReset) {
-      throw new Error('Passwort-Reset ist in dieser Umgebung nicht aktiv.')
-    }
+    if (!member.email || member.email.endsWith('@familie.local')) throw new Error('Für diesen Nutzer gibt es keine echte E-Mail.')
+    if (!actions.sendPasswordReset) throw new Error('Passwort-Reset ist in dieser Umgebung nicht aktiv.')
     await actions.sendPasswordReset(member.email)
   }
 
@@ -268,7 +285,7 @@ export const SettingsPage = () => {
         <div className="setup-card">
           <UserCheck size={24} />
           <strong>{currentMembership?.display_name ?? user?.email ?? 'Nicht angemeldet'}</strong>
-          <span>{user?.email ? user.email : 'Aktueller Zugang konnte nicht gelesen werden.'}</span>
+          <span>{currentMembership?.login_name ? `Login: ${currentMembership.login_name}` : user?.email ?? 'Aktueller Zugang konnte nicht gelesen werden.'}</span>
           <Tag tone={isAdmin ? 'good' : 'neutral'}>{currentMembership ? roleLabel[currentMembership.role] : 'ohne Rolle'}</Tag>
         </div>
       </Card>
@@ -277,11 +294,7 @@ export const SettingsPage = () => {
         <div className="setup-card">
           <Database size={24} />
           <strong>{data.family.name}</strong>
-          <span>
-            {configured
-              ? 'Onlinebetrieb mit Supabase. Familien-Daten werden pro Familie getrennt gespeichert.'
-              : 'Demo-Vorschau ohne Supabase. Änderungen bleiben nur lokal in dieser Sitzung.'}
-          </span>
+          <span>{configured ? 'Onlinebetrieb mit Supabase.' : 'Demo-Vorschau ohne Supabase.'}</span>
           <Tag tone="good">Zugriff pro Familie getrennt</Tag>
         </div>
       </Card>
@@ -295,26 +308,26 @@ export const SettingsPage = () => {
         </div>
       </Card>
 
-      <Card title="Person einladen">
-        <form className="form-stack" onSubmit={onInviteSubmit}>
+      <Card title="Nutzer direkt anlegen">
+        <form className="form-stack" onSubmit={onCreateUserSubmit}>
           <div className="form-intro">
             <Send size={22} />
-            <span>Einladungen laufen über Supabase. Die Mail kann im Junk-Ordner landen.</span>
+            <span>Für Kinder reicht ein Loginname. E-Mail ist optional.</span>
           </div>
-          <Field label="E-Mail">
-            <TextInput
-              autoComplete="email"
-              disabled={!canInvite}
-              type="email"
-              value={inviteEmail}
-              onChange={(event) => setInviteEmail(event.target.value)}
-            />
+          <Field label="Name">
+            <TextInput disabled={!canManageMembers} value={newName} onChange={(event) => setNewName(event.target.value)} />
           </Field>
-          <Field label="Anzeigename">
-            <TextInput disabled={!canInvite} value={inviteName} onChange={(event) => setInviteName(event.target.value)} />
+          <Field label="Loginname">
+            <TextInput disabled={!canManageMembers} placeholder="max" value={newLoginName} onChange={(event) => setNewLoginName(event.target.value)} />
+          </Field>
+          <Field label="Passwort">
+            <TextInput disabled={!canManageMembers} minLength={8} type="password" value={newUserPassword} onChange={(event) => setNewUserPassword(event.target.value)} />
+          </Field>
+          <Field label="E-Mail optional">
+            <TextInput disabled={!canManageMembers} type="email" value={newEmail} onChange={(event) => setNewEmail(event.target.value)} />
           </Field>
           <Field label="Rolle">
-            <Select disabled={!canInvite} value={inviteRole} onChange={(event) => setInviteRole(event.target.value as Role)}>
+            <Select disabled={!canManageMembers} value={newRole} onChange={(event) => setNewRole(event.target.value as Role)}>
               {(['adult', 'child', 'admin'] as Role[]).map((role) => (
                 <option key={role} value={role}>
                   {roleLabel[role]}
@@ -322,10 +335,10 @@ export const SettingsPage = () => {
               ))}
             </Select>
           </Field>
-          {inviteError && <p className="form-error">{inviteError}</p>}
-          {inviteMessage && <p className="form-success">{inviteMessage}</p>}
-          <Button disabled={!canInvite} type="submit">
-            Einladung senden
+          {userError && <p className="form-error">{userError}</p>}
+          {userMessage && <p className="form-success">{userMessage}</p>}
+          <Button disabled={!canManageMembers} type="submit">
+            Nutzer anlegen
           </Button>
         </form>
       </Card>
@@ -338,22 +351,10 @@ export const SettingsPage = () => {
           </div>
           <div className="two-column-fields">
             <Field label="Neues Passwort">
-              <TextInput
-                autoComplete="new-password"
-                disabled={!configured}
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
+              <TextInput autoComplete="new-password" disabled={!configured} type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
             </Field>
             <Field label="Wiederholen">
-              <TextInput
-                autoComplete="new-password"
-                disabled={!configured}
-                type="password"
-                value={passwordRepeat}
-                onChange={(event) => setPasswordRepeat(event.target.value)}
-              />
+              <TextInput autoComplete="new-password" disabled={!configured} type="password" value={passwordRepeat} onChange={(event) => setPasswordRepeat(event.target.value)} />
             </Field>
           </div>
           {passwordError && <p className="form-error">{passwordError}</p>}
@@ -368,7 +369,7 @@ export const SettingsPage = () => {
         <div className="visibility-admin">
           <div className="form-intro">
             <UserPlus size={22} />
-            <span>Admins verwalten Name, Rolle, Status, Menüpunkte und Passwort-Reset pro Mitglied.</span>
+            <span>Admins verwalten Name, Login, Rolle, Status, Menüpunkte und Passwörter.</span>
           </div>
           <div className="member-admin-grid">
             {data.memberships.map((member) => (

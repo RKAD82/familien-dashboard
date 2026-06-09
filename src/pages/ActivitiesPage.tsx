@@ -17,6 +17,8 @@ const formatActivityWindow = (startsAt: string | null, endsAt: string | null) =>
 
 export const ActivitiesPage = () => {
   const { data, actions } = useFamilyRoute()
+  const activeActivities = data.activitySuggestions.filter((activity) => activity.status !== 'archived')
+  const archivedActivities = data.activitySuggestions.filter((activity) => activity.status === 'archived')
 
   return (
     <div className="page-stack">
@@ -32,7 +34,7 @@ export const ActivitiesPage = () => {
       </section>
 
       <div className="activity-grid">
-        {data.activitySuggestions.map((activity) => (
+        {activeActivities.map((activity) => (
           <Card key={activity.id}>
             <article className="activity-card">
               <div className="activity-card-topline">
@@ -70,13 +72,28 @@ export const ActivitiesPage = () => {
                   Zur Veranstaltungsseite
                 </a>
               )}
+              <Button variant="ghost" onClick={() => void actions.archiveActivity(activity.id, true)}>
+                Archivieren
+              </Button>
             </article>
           </Card>
         ))}
-        {!data.activitySuggestions.length && (
+        {!activeActivities.length && (
           <EmptyState title="Keine Vorschläge" body="Seed-Daten oder Agentenlauf müssen Vorschläge speichern." />
         )}
       </div>
+      {archivedActivities.length > 0 && (
+        <Card title="Archiv">
+          <div className="compact-list">
+            {archivedActivities.map((activity) => (
+              <article key={activity.id}>
+                <strong>{activity.title}</strong>
+                <button type="button" onClick={() => void actions.archiveActivity(activity.id, false)}>Zurückholen</button>
+              </article>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   )
 }

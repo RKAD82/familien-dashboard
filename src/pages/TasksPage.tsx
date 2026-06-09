@@ -17,6 +17,7 @@ export const TasksPage = () => {
   const [important, setImportant] = useState(false)
   const [notify, setNotify] = useState(false)
   const [selectedTaskId, setSelectedTaskId] = useState(data.tasks[0]?.id ?? '')
+  const [editing, setEditing] = useState(false)
 
   const tasks = openTasks(data.tasks)
   const done = data.tasks.filter((task) => task.status === 'done')
@@ -67,6 +68,36 @@ export const TasksPage = () => {
     }
   }
 
+  const startEdit = () => {
+    if (!selectedTask) return
+    setTitle(selectedTask.title)
+    setDescription(selectedTask.description ?? '')
+    setDueAt(selectedTask.due_at ? selectedTask.due_at.slice(0, 16) : '')
+    setCategory(selectedTask.category)
+    setImportant(selectedTask.is_important)
+    setNotify(selectedTask.notify_family)
+    setEditing(true)
+  }
+
+  const saveEdit = async () => {
+    if (!selectedTask || !title.trim()) return
+    await actions.updateTask(selectedTask, {
+      title: title.trim(),
+      description: description.trim() || null,
+      due_at: dueAt ? new Date(dueAt).toISOString() : null,
+      category: category.trim() || 'Familie',
+      is_important: important,
+      notify_family: notify,
+      status: selectedTask.status,
+    })
+    setTitle('')
+    setDescription('')
+    setDueAt('')
+    setImportant(false)
+    setNotify(false)
+    setEditing(false)
+  }
+
   return (
     <div className="page-stack tasks-page">
       <section className="page-title">
@@ -105,10 +136,15 @@ export const TasksPage = () => {
               <input type="checkbox" checked={notify} onChange={(event) => setNotify(event.target.checked)} />
               Familie benachrichtigen
             </label>
-            <Button type="submit">
+            <Button type={editing ? 'button' : 'submit'} onClick={editing ? () => void saveEdit() : undefined}>
               <Plus size={18} />
-              Aufgabe speichern
+              {editing ? 'Änderungen speichern' : 'Aufgabe speichern'}
             </Button>
+            {editing && (
+              <Button variant="ghost" onClick={() => setEditing(false)}>
+                Bearbeitung abbrechen
+              </Button>
+            )}
           </form>
         </Card>
 
@@ -148,6 +184,9 @@ export const TasksPage = () => {
               </div>
               <span className="muted">{formatTaskDate(selectedTask.due_at)}</span>
               <div className="action-row">
+                <Button variant="secondary" onClick={startEdit}>
+                  Aufgabe bearbeiten
+                </Button>
                 {selectedTask.status === 'done' ? (
                   <Button variant="secondary" onClick={() => void actions.updateTaskStatus(selectedTask, 'open')}>
                     <RotateCcw size={18} />

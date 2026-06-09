@@ -84,15 +84,15 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       supabase.from('family_memberships').select('*, profile:profiles(email)').eq('family_id', familyId),
       supabase.from('events').select('*').eq('family_id', familyId).order('starts_at'),
       supabase.from('tasks').select('*').eq('family_id', familyId).order('due_at', { nullsFirst: false }),
-      supabase.from('shopping_lists').select('*').eq('family_id', familyId).eq('archived', false).order('title'),
+      supabase.from('shopping_lists').select('*').eq('family_id', familyId).eq('archived', false).order('is_template').order('title'),
       supabase.from('link_collections').select('*').eq('family_id', familyId).order('sort_order'),
       supabase.from('family_contacts').select('*').eq('family_id', familyId).order('favorite', { ascending: false }).order('name'),
       supabase.from('emergency_items').select('*').eq('family_id', familyId).order('priority').order('title'),
       supabase.from('notes').select('*').eq('family_id', familyId).order('updated_at', { ascending: false }),
       supabase.from('waste_districts').select('*').eq('active', true),
-      supabase.from('recipes').select('*').eq('family_id', familyId).eq('status', 'active').order('title'),
+      supabase.from('recipes').select('*').eq('family_id', familyId).order('status').order('title'),
       supabase.from('recipe_suggestions').select('*, recipe:recipes(*)').eq('family_id', familyId).order('rank'),
-      supabase.from('activity_suggestions').select('*').eq('family_id', familyId).order('family_score', { ascending: false }),
+      supabase.from('activity_suggestions').select('*').eq('family_id', familyId).order('status').order('family_score', { ascending: false }),
       userId
         ? supabase
             .from('notification_deliveries')
@@ -289,6 +289,37 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
 
         await loadData()
       },
+      updateEvent: async (
+        event: EventItem,
+        input: Pick<
+          EventItem,
+          | 'title'
+          | 'starts_at'
+          | 'ends_at'
+          | 'all_day'
+          | 'recurrence_rule'
+          | 'category'
+          | 'location'
+          | 'notes'
+          | 'is_important'
+          | 'notify_family'
+        >,
+      ) => {
+        const client = requireSupabase()
+        const { error: updateError } = await client.from('events').update({ ...input, updated_at: new Date().toISOString() }).eq('id', event.id)
+        if (updateError) {
+          throw updateError
+        }
+        await loadData()
+      },
+      deleteEvent: async (event: EventItem) => {
+        const client = requireSupabase()
+        const { error: deleteError } = await client.from('events').delete().eq('id', event.id)
+        if (deleteError) {
+          throw deleteError
+        }
+        await loadData()
+      },
       createTask: async (input: Pick<TaskItem, 'title' | 'description' | 'due_at' | 'category' | 'is_important' | 'notify_family'>) => {
         const client = requireSupabase()
         if (!familyId) {
@@ -316,6 +347,17 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
           })
         }
 
+        await loadData()
+      },
+      updateTask: async (
+        task: TaskItem,
+        input: Pick<TaskItem, 'title' | 'description' | 'due_at' | 'category' | 'is_important' | 'notify_family' | 'status'>,
+      ) => {
+        const client = requireSupabase()
+        const { error: updateError } = await client.from('tasks').update({ ...input, updated_at: new Date().toISOString() }).eq('id', task.id)
+        if (updateError) {
+          throw updateError
+        }
         await loadData()
       },
       updateTaskStatus: async (task: TaskItem, status: TaskItem['status']) => {
@@ -352,6 +394,71 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         })
         if (insertError) {
           throw insertError
+        }
+        await loadData()
+      },
+      createShoppingList: async (input: Pick<ShoppingList, 'title' | 'store_type' | 'is_template'>) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          return
+        }
+        const { error: insertError } = await client.from('shopping_lists').insert({ ...input, family_id: familyId, archived: false })
+        if (insertError) {
+          throw insertError
+        }
+        await loadData()
+      },
+      updateShoppingList: async (list: ShoppingList, input: Pick<ShoppingList, 'title' | 'store_type' | 'is_template'> & { archived: boolean }) => {
+        const client = requireSupabase()
+        const { error: updateError } = await client.from('shopping_lists').update(input).eq('id', list.id)
+        if (updateError) {
+          throw updateError
+        }
+        await loadData()
+      },
+      deleteShoppingList: async (list: ShoppingList) => {
+        const client = requireSupabase()
+        const { error: itemError } = await client.from('shopping_items').delete().eq('list_id', list.id)
+        if (itemError) {
+          throw itemError
+        }
+        const { error: listError } = await client.from('shopping_lists').delete().eq('id', list.id)
+        if (listError) {
+          throw listError
+        }
+        await loadData()
+      },
+      copyShoppingListFromTemplate: async (template: ShoppingList, title: string) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          return
+        }
+        const templateItems = data?.shoppingItems.filter((item) => item.list_id === template.id) ?? []
+        const { data: created, error: listError } = await client
+          .from('shopping_lists')
+          .insert({ family_id: familyId, title, store_type: template.store_type, archived: false, is_template: false })
+          .select()
+          .single()
+        if (listError) {
+          throw listError
+        }
+        if (templateItems.length) {
+          const { error: itemError } = await client.from('shopping_items').insert(
+            templateItems.map((item, index) => ({
+              list_id: created.id,
+              title: item.title,
+              quantity: item.quantity,
+              unit: item.unit,
+              category: item.category,
+              source_label: item.source_label,
+              checked: false,
+              sort_order: index,
+              added_by: userId,
+            })),
+          )
+          if (itemError) {
+            throw itemError
+          }
         }
         await loadData()
       },
@@ -433,6 +540,28 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         }
         await loadData()
       },
+      updateFamilyContact: async (
+        contact: FamilyContact,
+        input: Pick<FamilyContact, 'name' | 'relation' | 'phone' | 'mobile' | 'email' | 'address' | 'notes' | 'favorite'>,
+      ) => {
+        const client = requireSupabase()
+        const { error: updateError } = await client
+          .from('family_contacts')
+          .update({ ...input, updated_at: new Date().toISOString() })
+          .eq('id', contact.id)
+        if (updateError) {
+          throw updateError
+        }
+        await loadData()
+      },
+      deleteFamilyContact: async (contact: FamilyContact) => {
+        const client = requireSupabase()
+        const { error: deleteError } = await client.from('family_contacts').delete().eq('id', contact.id)
+        if (deleteError) {
+          throw deleteError
+        }
+        await loadData()
+      },
       createEmergencyItem: async (
         input: Pick<
           EmergencyItem,
@@ -450,6 +579,28 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         })
         if (insertError) {
           throw insertError
+        }
+        await loadData()
+      },
+      updateEmergencyItem: async (
+        item: EmergencyItem,
+        input: Pick<EmergencyItem, 'type' | 'title' | 'primary_text' | 'secondary_text' | 'phone' | 'address' | 'url' | 'notes' | 'priority'>,
+      ) => {
+        const client = requireSupabase()
+        const { error: updateError } = await client
+          .from('emergency_items')
+          .update({ ...input, updated_at: new Date().toISOString() })
+          .eq('id', item.id)
+        if (updateError) {
+          throw updateError
+        }
+        await loadData()
+      },
+      deleteEmergencyItem: async (item: EmergencyItem) => {
+        const client = requireSupabase()
+        const { error: deleteError } = await client.from('emergency_items').delete().eq('id', item.id)
+        if (deleteError) {
+          throw deleteError
         }
         await loadData()
       },
@@ -513,6 +664,25 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         const { error: insertError } = await client.from('shopping_items').insert(payload)
         if (insertError) {
           throw insertError
+        }
+        await loadData()
+      },
+      archiveRecipe: async (recipeId: string, archived: boolean) => {
+        const client = requireSupabase()
+        const { error: updateError } = await client.from('recipes').update({ status: archived ? 'archived' : 'active' }).eq('id', recipeId)
+        if (updateError) {
+          throw updateError
+        }
+        await loadData()
+      },
+      archiveActivity: async (activityId: string, archived: boolean) => {
+        const client = requireSupabase()
+        const { error: updateError } = await client
+          .from('activity_suggestions')
+          .update({ status: archived ? 'archived' : 'suggested' })
+          .eq('id', activityId)
+        if (updateError) {
+          throw updateError
         }
         await loadData()
       },
@@ -585,8 +755,33 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         }
         await loadData()
       },
+      manageFamilyMember: async (input: {
+        user_id?: string
+        login_name?: string
+        email?: string | null
+        display_name: string
+        password?: string
+        role: Role
+        active: boolean
+        visible_nav_items: string[]
+      }) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          return
+        }
+        const { error: manageError } = await client.functions.invoke('manage-family-member', {
+          body: {
+            family_id: familyId,
+            ...input,
+          },
+        })
+        if (manageError) {
+          throw manageError
+        }
+        await loadData()
+      },
     }),
-    [data?.recipeIngredients, data?.recipes, familyId, loadData, userId],
+    [data?.recipeIngredients, data?.recipes, data?.shoppingItems, familyId, loadData, userId],
   )
 
   return { data, loading, error, actions }

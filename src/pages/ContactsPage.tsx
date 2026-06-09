@@ -13,6 +13,7 @@ export const ContactsPage = () => {
   const [address, setAddress] = useState('')
   const [notes, setNotes] = useState('')
   const [favorite, setFavorite] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const contacts = [...data.contacts].sort((a, b) => Number(b.favorite) - Number(a.favorite) || a.name.localeCompare(b.name))
@@ -27,7 +28,7 @@ export const ContactsPage = () => {
     }
 
     try {
-      await actions.createFamilyContact({
+      const input = {
         name: name.trim(),
         relation: relation.trim() || null,
         phone: phone.trim() || null,
@@ -36,7 +37,13 @@ export const ContactsPage = () => {
         address: address.trim() || null,
         notes: notes.trim() || null,
         favorite,
-      })
+      }
+      const editing = editingId ? data.contacts.find((contact) => contact.id === editingId) : null
+      if (editing) {
+        await actions.updateFamilyContact(editing, input)
+      } else {
+        await actions.createFamilyContact(input)
+      }
       setName('')
       setRelation('')
       setPhone('')
@@ -45,9 +52,22 @@ export const ContactsPage = () => {
       setAddress('')
       setNotes('')
       setFavorite(false)
+      setEditingId(null)
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Kontakt konnte nicht gespeichert werden.')
     }
+  }
+
+  const editContact = (contact: (typeof data.contacts)[number]) => {
+    setEditingId(contact.id)
+    setName(contact.name)
+    setRelation(contact.relation ?? '')
+    setPhone(contact.phone ?? '')
+    setMobile(contact.mobile ?? '')
+    setEmail(contact.email ?? '')
+    setAddress(contact.address ?? '')
+    setNotes(contact.notes ?? '')
+    setFavorite(contact.favorite)
   }
 
   return (
@@ -59,7 +79,7 @@ export const ContactsPage = () => {
         </div>
       </section>
 
-      <Card title="Kontakt anlegen">
+      <Card title={editingId ? 'Kontakt bearbeiten' : 'Kontakt anlegen'}>
         <form className="form-stack" onSubmit={onSubmit}>
           <Field label="Name">
             <TextInput value={name} onChange={(event) => setName(event.target.value)} />
@@ -91,8 +111,13 @@ export const ContactsPage = () => {
           {error && <p className="form-error">{error}</p>}
           <Button type="submit">
             <Plus size={18} />
-            Kontakt speichern
+            {editingId ? 'Kontakt ändern' : 'Kontakt speichern'}
           </Button>
+          {editingId && (
+            <Button variant="ghost" onClick={() => setEditingId(null)}>
+              Bearbeitung abbrechen
+            </Button>
+          )}
         </form>
       </Card>
 
@@ -136,6 +161,10 @@ export const ContactsPage = () => {
                 </div>
                 {contact.notes && <p>{contact.notes}</p>}
                 {contact.favorite && <Tag tone="warn">wichtig</Tag>}
+                <div className="inline-actions">
+                  <button type="button" onClick={() => editContact(contact)}>Bearbeiten</button>
+                  <button type="button" onClick={() => void actions.deleteFamilyContact(contact)}>Löschen</button>
+                </div>
               </article>
             ))}
           </div>

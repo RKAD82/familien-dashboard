@@ -53,6 +53,7 @@ export interface FamilyMembership {
   notification_preferences?: Record<string, unknown>
   visible_nav_items?: NavItemId[] | null
   email?: string | null
+  login_name?: string | null
   family?: Family
 }
 
@@ -106,6 +107,7 @@ export interface ShoppingList {
   title: string
   store_type: string
   archived: boolean
+  is_template: boolean
 }
 
 export interface ShoppingItem {
@@ -293,7 +295,7 @@ export interface ActivitySuggestion {
   age_label: string
   url: string | null
   image_url: string | null
-  status: 'suggested' | 'saved' | 'dismissed'
+  status: 'suggested' | 'saved' | 'dismissed' | 'archived'
   expires_at: string | null
 }
 

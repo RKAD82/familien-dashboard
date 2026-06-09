@@ -5,7 +5,7 @@ import { Button, Card, Field, TextInput } from './ui'
 
 export const LoginGate = ({ children }: { children: ReactNode }) => {
   const { configured, session, signIn, loading, passwordRecovery, resetPasswordForEmail, updatePassword } = useAuth()
-  const [email, setEmail] = useState('')
+  const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
   const [resetEmail, setResetEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -97,7 +97,7 @@ export const LoginGate = ({ children }: { children: ReactNode }) => {
     setError(null)
     setMessage(null)
     try {
-      await signIn(email, password)
+      await signIn(login, password)
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : 'Login fehlgeschlagen.')
     }
@@ -152,8 +152,8 @@ export const LoginGate = ({ children }: { children: ReactNode }) => {
         </div>
         <h1>Familien-Dashboard</h1>
         <p>Privater Zugang für Kalender, Aufgaben, Einkauf und Familienmeldungen.</p>
-        <Field label="E-Mail">
-          <TextInput autoComplete="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+        <Field label="Loginname oder E-Mail">
+          <TextInput autoComplete="username" value={login} onChange={(event) => setLogin(event.target.value)} />
         </Field>
         <Field label="Passwort">
           <TextInput

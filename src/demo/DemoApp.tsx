@@ -53,6 +53,15 @@ export const DemoApp = () => {
           ],
         }))
       },
+      updateEvent: async (event, input) => {
+        setData((current) => ({
+          ...current,
+          events: current.events.map((entry) => (entry.id === event.id ? { ...entry, ...input } : entry)),
+        }))
+      },
+      deleteEvent: async (event) => {
+        setData((current) => ({ ...current, events: current.events.filter((entry) => entry.id !== event.id) }))
+      },
       createTask: async (input) => {
         setData((current) => ({
           ...current,
@@ -82,6 +91,12 @@ export const DemoApp = () => {
           tasks: current.tasks.map((entry) => (entry.id === task.id ? { ...entry, status } : entry)),
         }))
       },
+      updateTask: async (task, input) => {
+        setData((current) => ({
+          ...current,
+          tasks: current.tasks.map((entry) => (entry.id === task.id ? { ...entry, ...input } : entry)),
+        }))
+      },
       deleteTask: async (task: TaskItem) => {
         setData((current) => ({
           ...current,
@@ -108,6 +123,40 @@ export const DemoApp = () => {
             ...current.shoppingItems,
           ],
         }))
+      },
+      createShoppingList: async (input) => {
+        setData((current) => ({
+          ...current,
+          shoppingLists: [{ id: newId('list-demo'), family_id: current.family.id, archived: false, ...input }, ...current.shoppingLists],
+        }))
+      },
+      updateShoppingList: async (list, input) => {
+        setData((current) => ({
+          ...current,
+          shoppingLists: current.shoppingLists.map((entry) => (entry.id === list.id ? { ...entry, ...input } : entry)),
+        }))
+      },
+      deleteShoppingList: async (list) => {
+        setData((current) => ({
+          ...current,
+          shoppingLists: current.shoppingLists.filter((entry) => entry.id !== list.id),
+          shoppingItems: current.shoppingItems.filter((entry) => entry.list_id !== list.id),
+        }))
+      },
+      copyShoppingListFromTemplate: async (template, title) => {
+        setData((current) => {
+          const id = newId('list-demo')
+          return {
+            ...current,
+            shoppingLists: [{ ...template, id, title, is_template: false }, ...current.shoppingLists],
+            shoppingItems: [
+              ...current.shoppingItems
+                .filter((item) => item.list_id === template.id)
+                .map((item, index) => ({ ...item, id: newId(`item-demo-${index}`), list_id: id, checked: false })),
+              ...current.shoppingItems,
+            ],
+          }
+        })
       },
       updateShoppingItem: async (item, input) => {
         setData((current) => ({
@@ -189,6 +238,15 @@ export const DemoApp = () => {
           ],
         }))
       },
+      updateFamilyContact: async (contact, input) => {
+        setData((current) => ({
+          ...current,
+          contacts: current.contacts.map((entry) => (entry.id === contact.id ? { ...entry, ...input } : entry)),
+        }))
+      },
+      deleteFamilyContact: async (contact) => {
+        setData((current) => ({ ...current, contacts: current.contacts.filter((entry) => entry.id !== contact.id) }))
+      },
       createEmergencyItem: async (input) => {
         setData((current) => ({
           ...current,
@@ -210,6 +268,15 @@ export const DemoApp = () => {
             ...current.emergencyItems,
           ],
         }))
+      },
+      updateEmergencyItem: async (item, input) => {
+        setData((current) => ({
+          ...current,
+          emergencyItems: current.emergencyItems.map((entry) => (entry.id === item.id ? { ...entry, ...input } : entry)),
+        }))
+      },
+      deleteEmergencyItem: async (item) => {
+        setData((current) => ({ ...current, emergencyItems: current.emergencyItems.filter((entry) => entry.id !== item.id) }))
       },
       createNote: async (input) => {
         setData((current) => ({
@@ -262,6 +329,20 @@ export const DemoApp = () => {
             ],
           }
         })
+      },
+      archiveRecipe: async (recipeId, archived) => {
+        setData((current) => ({
+          ...current,
+          recipes: current.recipes.map((entry) => (entry.id === recipeId ? { ...entry, status: archived ? 'archived' : 'active' } : entry)),
+        }))
+      },
+      archiveActivity: async (activityId, archived) => {
+        setData((current) => ({
+          ...current,
+          activitySuggestions: current.activitySuggestions.map((entry) =>
+            entry.id === activityId ? { ...entry, status: archived ? 'archived' : 'suggested' } : entry,
+          ),
+        }))
       },
       updateMembershipNavigation: async (userId, visibleNavItems) => {
         setData((current) => ({

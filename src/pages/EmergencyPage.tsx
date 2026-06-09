@@ -32,6 +32,7 @@ export const EmergencyPage = () => {
   const [notes, setNotes] = useState('')
   const [priority, setPriority] = useState(1)
   const [error, setError] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const emergencyItems = [...data.emergencyItems].sort((a, b) => a.priority - b.priority || a.title.localeCompare(b.title))
 
   const onSubmit = async (event: FormEvent) => {
@@ -44,7 +45,7 @@ export const EmergencyPage = () => {
     }
 
     try {
-      await actions.createEmergencyItem({
+      const input = {
         type,
         title: title.trim(),
         primary_text: primaryText.trim(),
@@ -54,7 +55,13 @@ export const EmergencyPage = () => {
         url: url.trim() || null,
         notes: notes.trim() || null,
         priority,
-      })
+      }
+      const editing = editingId ? data.emergencyItems.find((item) => item.id === editingId) : null
+      if (editing) {
+        await actions.updateEmergencyItem(editing, input)
+      } else {
+        await actions.createEmergencyItem(input)
+      }
       setType('contact')
       setTitle('')
       setPrimaryText('')
@@ -64,9 +71,23 @@ export const EmergencyPage = () => {
       setUrl('')
       setNotes('')
       setPriority(1)
+      setEditingId(null)
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Notfall-Eintrag konnte nicht gespeichert werden.')
     }
+  }
+
+  const editItem = (item: (typeof data.emergencyItems)[number]) => {
+    setEditingId(item.id)
+    setType(item.type)
+    setTitle(item.title)
+    setPrimaryText(item.primary_text)
+    setSecondaryText(item.secondary_text ?? '')
+    setPhone(item.phone ?? '')
+    setAddress(item.address ?? '')
+    setUrl(item.url ?? '')
+    setNotes(item.notes ?? '')
+    setPriority(item.priority)
   }
 
   return (
@@ -78,7 +99,7 @@ export const EmergencyPage = () => {
         </div>
       </section>
 
-      <Card title="Notfall-Eintrag anlegen">
+      <Card title={editingId ? 'Notfall-Eintrag bearbeiten' : 'Notfall-Eintrag anlegen'}>
         <form className="form-stack" onSubmit={onSubmit}>
           <Field label="Art">
             <Select value={type} onChange={(event) => setType(event.target.value as EmergencyItemType)}>
@@ -124,8 +145,13 @@ export const EmergencyPage = () => {
           {error && <p className="form-error">{error}</p>}
           <Button type="submit">
             <Plus size={18} />
-            Eintrag speichern
+            {editingId ? 'Eintrag ändern' : 'Eintrag speichern'}
           </Button>
+          {editingId && (
+            <Button variant="ghost" onClick={() => setEditingId(null)}>
+              Bearbeitung abbrechen
+            </Button>
+          )}
         </form>
       </Card>
 
@@ -160,6 +186,10 @@ export const EmergencyPage = () => {
                       </a>
                     )}
                     {item.notes && <small>{item.notes}</small>}
+                    <div className="inline-actions">
+                      <button type="button" onClick={() => editItem(item)}>Bearbeiten</button>
+                      <button type="button" onClick={() => void actions.deleteEmergencyItem(item)}>Löschen</button>
+                    </div>
                   </div>
                 </article>
               )

@@ -31,8 +31,9 @@ const demoId = (prefix: string, index: number) => `${prefix}-${String(index + 1)
 
 export const createDemoData = (): DashboardData => {
   const shoppingLists: ShoppingList[] = [
-    { id: 'shopping-supermarkt', family_id: family.id, title: 'Supermarkt', store_type: 'supermarkt', archived: false },
-    { id: 'shopping-drogerie', family_id: family.id, title: 'Drogerie', store_type: 'drogerie', archived: false },
+    { id: 'shopping-supermarkt', family_id: family.id, title: 'Supermarkt', store_type: 'supermarkt', archived: false, is_template: false },
+    { id: 'shopping-drogerie', family_id: family.id, title: 'Drogerie', store_type: 'drogerie', archived: false, is_template: false },
+    { id: 'shopping-template-standard', family_id: family.id, title: 'Standard-Wocheneinkauf', store_type: 'supermarkt', archived: false, is_template: true },
   ]
 
   const recipes: Recipe[] = recipeSeed.recipes.map((recipe, index) => ({
