@@ -361,6 +361,14 @@ code {
   line-height: 1.45;
 }
 
+.page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
 .span-2 {
   grid-column: span 2;
 }

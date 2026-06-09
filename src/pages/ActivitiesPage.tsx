@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { CalendarDays, ExternalLink, MapPin, RefreshCw, Ticket, Users } from 'lucide-react'
 import { Button, Card, EmptyState, Tag } from '../components/ui'
 import { formatLongDate, formatTime } from '../lib/date'
 import { useFamilyRoute } from '../routes/context'
+import type { ActivityAgentRun } from '../types'
 
 const formatActivityWindow = (startsAt: string | null, endsAt: string | null) => {
   if (!startsAt) {
@@ -15,23 +17,53 @@ const formatActivityWindow = (startsAt: string | null, endsAt: string | null) =>
   return end ? `${date}, ${start}-${end} Uhr` : `${date}, ${start} Uhr`
 }
 
+const formatRunLabel = (run: ActivityAgentRun | undefined) => {
+  if (!run) {
+    return 'Noch kein Aktualisierungslauf gespeichert.'
+  }
+
+  const finished = run.finished_at ? new Date(run.finished_at) : new Date(run.started_at)
+  return `${finished.toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' })}: ${run.items_saved} gespeichert, ${run.items_found} aktiv.`
+}
+
 export const ActivitiesPage = () => {
   const { data, actions } = useFamilyRoute()
+  const [refreshing, setRefreshing] = useState(false)
   const activeActivities = data.activitySuggestions.filter((activity) => activity.status !== 'archived')
   const archivedActivities = data.activitySuggestions.filter((activity) => activity.status === 'archived')
+  const activityRuns = data.activityAgentRuns.filter((run) => run.run_type === 'activities')
+  const lastRun = activityRuns[0]
+
+  const runActivities = async () => {
+    setRefreshing(true)
+    try {
+      await actions.refreshActivities()
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   return (
     <div className="page-stack">
       <section className="page-title">
         <div>
           <h1>Aktivitäten</h1>
-          <p>Vorschläge aus den gespeicherten Supabase-Daten. Aktualisieren lädt neu, sucht aber nicht automatisch im Internet.</p>
+          <p>Vorschläge aus gespeicherten Quellen. Aktualisieren startet den Quellenlauf und archiviert abgelaufene Einträge.</p>
         </div>
-        <Button variant="secondary" onClick={() => void actions.refresh()}>
+        <Button variant="secondary" disabled={refreshing} onClick={() => void runActivities()}>
           <RefreshCw size={18} />
-          Aktualisieren
+          {refreshing ? 'Läuft...' : 'Aktualisieren'}
         </Button>
       </section>
+
+      <Card title="Letzter Lauf">
+        <div className="compact-list">
+          <article>
+            <strong>{lastRun?.status === 'ok' ? 'Aktualisierung erfolgreich' : lastRun?.status === 'error' ? 'Fehler im Lauf' : 'Aktivitäten-Agent'}</strong>
+            <span>{formatRunLabel(lastRun)}</span>
+          </article>
+        </div>
+      </Card>
 
       <div className="activity-grid">
         {activeActivities.map((activity) => (

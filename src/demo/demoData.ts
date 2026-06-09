@@ -4,6 +4,7 @@ import recipeSeed from '../../data/seed/recipes-seed.json'
 import sortingSeed from '../../data/seed/waste-sorting-pulheim.json'
 import type {
   ActivitySuggestion,
+  ActivityAgentRun,
   DashboardData,
   EmergencyItem,
   Family,
@@ -374,6 +375,32 @@ export const createDemoData = (): DashboardData => {
       status: 'suggested',
       expires_at: null,
     })) satisfies ActivitySuggestion[],
+    activityAgentRuns: [
+      {
+        id: 'activity-run-demo-1',
+        family_id: family.id,
+        run_type: 'activities',
+        started_at: '2026-06-08T06:00:00.000Z',
+        finished_at: '2026-06-08T06:00:02.000Z',
+        status: 'ok',
+        sources_checked: 1,
+        items_found: activitySeed.suggestions.length,
+        items_saved: activitySeed.suggestions.length,
+        error_summary: null,
+      },
+      {
+        id: 'recipe-run-demo-1',
+        family_id: family.id,
+        run_type: 'recipes',
+        started_at: '2026-06-08T06:05:00.000Z',
+        finished_at: '2026-06-08T06:05:01.000Z',
+        status: 'ok',
+        sources_checked: 1,
+        items_found: recipes.length,
+        items_saved: 5,
+        error_summary: null,
+      },
+    ] satisfies ActivityAgentRun[],
     notificationDeliveries: [
       {
         id: 'delivery-demo-1',

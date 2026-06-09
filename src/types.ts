@@ -262,7 +262,7 @@ export interface RecipeSuggestion {
   suggestion_week: string
   rank: number
   reason: string
-  status: 'suggested' | 'planned' | 'dismissed'
+  status: 'suggested' | 'planned' | 'dismissed' | 'archived'
   generated_by: 'seed-generator' | 'manual'
   recipe?: Recipe
 }
@@ -275,6 +275,19 @@ export interface ActivitySource {
   active: boolean
   last_checked_at: string | null
   notes: string | null
+}
+
+export interface ActivityAgentRun {
+  id: string
+  family_id: string | null
+  run_type: 'activities' | 'recipes'
+  started_at: string
+  finished_at: string | null
+  status: 'ok' | 'skipped' | 'error'
+  sources_checked: number
+  items_found: number
+  items_saved: number
+  error_summary: string | null
 }
 
 export interface ActivitySuggestion {
@@ -344,5 +357,6 @@ export interface DashboardData {
   recipeIngredients: RecipeIngredient[]
   recipeSuggestions: RecipeSuggestion[]
   activitySuggestions: ActivitySuggestion[]
+  activityAgentRuns: ActivityAgentRun[]
   notificationDeliveries: NotificationDelivery[]
 }

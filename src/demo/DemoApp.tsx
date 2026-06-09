@@ -344,6 +344,46 @@ export const DemoApp = () => {
           ),
         }))
       },
+      refreshActivities: async () => {
+        setData((current) => ({
+          ...current,
+          activityAgentRuns: [
+            {
+              id: newId('activity-run-demo'),
+              family_id: current.family.id,
+              run_type: 'activities',
+              started_at: new Date().toISOString(),
+              finished_at: new Date().toISOString(),
+              status: 'ok',
+              sources_checked: 1,
+              items_found: current.activitySuggestions.filter((entry) => entry.status !== 'archived').length,
+              items_saved: 0,
+              error_summary: null,
+            },
+            ...current.activityAgentRuns,
+          ],
+        }))
+      },
+      refreshRecipes: async () => {
+        setData((current) => ({
+          ...current,
+          activityAgentRuns: [
+            {
+              id: newId('recipe-run-demo'),
+              family_id: current.family.id,
+              run_type: 'recipes',
+              started_at: new Date().toISOString(),
+              finished_at: new Date().toISOString(),
+              status: 'ok',
+              sources_checked: 1,
+              items_found: current.recipes.filter((entry) => entry.status === 'active').length,
+              items_saved: current.recipeSuggestions.length,
+              error_summary: null,
+            },
+            ...current.activityAgentRuns,
+          ],
+        }))
+      },
       updateMembershipNavigation: async (userId, visibleNavItems) => {
         setData((current) => ({
           ...current,

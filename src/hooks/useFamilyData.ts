@@ -3,6 +3,7 @@ import { publicBasePath } from '../config'
 import { requireSupabase, supabase } from '../lib/supabase'
 import type {
   ActivitySuggestion,
+  ActivityAgentRun,
   DashboardData,
   EmergencyItem,
   EventItem,
@@ -45,7 +46,8 @@ const emptyData = (family: Family): DashboardData => ({
   recipes: [],
   recipeIngredients: [],
   recipeSuggestions: [],
-  activitySuggestions: [],
+    activitySuggestions: [],
+  activityAgentRuns: [],
   notificationDeliveries: [],
 })
 
@@ -79,6 +81,7 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       recipes,
       recipeSuggestions,
       activities,
+      activityRuns,
       deliveries,
     ] = await Promise.all([
       supabase.from('family_memberships').select('*, profile:profiles(email)').eq('family_id', familyId),
@@ -93,6 +96,12 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       supabase.from('recipes').select('*').eq('family_id', familyId).order('status').order('title'),
       supabase.from('recipe_suggestions').select('*, recipe:recipes(*)').eq('family_id', familyId).order('rank'),
       supabase.from('activity_suggestions').select('*').eq('family_id', familyId).order('status').order('family_score', { ascending: false }),
+      supabase
+        .from('activity_agent_runs')
+        .select('*')
+        .eq('family_id', familyId)
+        .order('started_at', { ascending: false })
+        .limit(20),
       userId
         ? supabase
             .from('notification_deliveries')
@@ -116,6 +125,7 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       recipes,
       recipeSuggestions,
       activities,
+      activityRuns,
       deliveries,
     ].find((result) => result.error && !isMissingOptionalTable(result.error))
 
@@ -188,6 +198,7 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       recipeIngredients: (recipeIngredients.data as RecipeIngredient[] | null) ?? [],
       recipeSuggestions: (recipeSuggestions.data as RecipeSuggestion[] | null) ?? [],
       activitySuggestions: (activities.data as ActivitySuggestion[] | null) ?? [],
+      activityAgentRuns: (activityRuns.data as ActivityAgentRun[] | null) ?? [],
       notificationDeliveries: (deliveries.data as NotificationDelivery[] | null) ?? [],
     })
     setLoading(false)
@@ -684,6 +695,24 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         if (updateError) {
           throw updateError
         }
+        await loadData()
+      },
+      refreshActivities: async () => {
+        const client = requireSupabase()
+        if (!familyId) return
+        const { error: refreshError } = await client.functions.invoke('refresh-activities', {
+          body: { family_id: familyId, force: true },
+        })
+        if (refreshError) throw refreshError
+        await loadData()
+      },
+      refreshRecipes: async () => {
+        const client = requireSupabase()
+        if (!familyId) return
+        const { error: refreshError } = await client.functions.invoke('refresh-recipes', {
+          body: { family_id: familyId },
+        })
+        if (refreshError) throw refreshError
         await loadData()
       },
       updateMembershipNavigation: async (memberUserId: string, visibleNavItems: string[]) => {

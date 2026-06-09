@@ -101,6 +101,8 @@ export interface FamilyActions {
   addRecipeToShoppingList: (listId: string, recipeId: string) => Promise<void>
   archiveRecipe: (recipeId: string, archived: boolean) => Promise<void>
   archiveActivity: (activityId: string, archived: boolean) => Promise<void>
+  refreshActivities: () => Promise<void>
+  refreshRecipes: () => Promise<void>
   updateMembershipNavigation?: (userId: string, visibleNavItems: NavItemId[]) => Promise<void>
   updateFamilyMember?: (
     userId: string,
