@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -9,6 +9,18 @@
     <title>Familien-Dashboard</title>
   </head>
   <body>
+    <script>
+      (() => {
+        try {
+          const stored = localStorage.getItem('familien-dashboard-theme') || 'light'
+          const allowed = stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'light'
+          const systemDark = matchMedia('(prefers-color-scheme: dark)').matches
+          document.documentElement.dataset.theme = allowed === 'system' ? (systemDark ? 'dark' : 'light') : allowed
+        } catch {
+          document.documentElement.dataset.theme = 'light'
+        }
+      })()
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

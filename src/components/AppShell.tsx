@@ -1,12 +1,14 @@
-import { Bell, CalendarDays, ChevronDown, CloudSun, LogOut, Menu, Plus, Search, UserRound, X } from 'lucide-react'
+import { Bell, CalendarDays, CloudSun, LogOut, Menu, UserRound, X } from 'lucide-react'
 import { useEffect, useState, type CSSProperties } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { addDays, formatDay, startOfWeek, toDateKey } from '../lib/date'
+import { addDays, formatDay, formatLongDate, startOfWeek, toDateKey } from '../lib/date'
+import { memberAvatarColor, memberInitials } from '../lib/assignments'
 import { isNavItemVisible, mobileNavItemIds, navigationItems } from '../navigation'
 import { useAuth } from '../hooks/useAuth'
 import type { FamilyActions } from '../routes/context'
-import type { DashboardData, FamilyMembership } from '../types'
+import type { DashboardData, FamilyMembership, NavItemId } from '../types'
 import { Button } from './ui'
+import { ThemeToggle } from './ThemeToggle'
 
 const weatherLabels: Record<number, string> = {
   0: 'Klar',
@@ -30,6 +32,12 @@ const weatherLabels: Record<number, string> = {
   95: 'Gewitter',
 }
 
+const navigationGroups: { label: string; ids: NavItemId[] }[] = [
+  { label: 'Zeit', ids: ['heute', 'woche', 'kalender'] },
+  { label: 'Tun', ids: ['aufgaben', 'einkauf', 'links', 'notizen', 'abfall', 'rezepte'] },
+  { label: 'Familie', ids: ['aktivitaeten', 'meldungen', 'kontakte', 'notfall', 'system'] },
+]
+
 const usePulheimWeather = () => {
   const [weather, setWeather] = useState<{ temperature: number; label: string } | null>(null)
 
@@ -43,21 +51,15 @@ const usePulheimWeather = () => {
           'https://api.open-meteo.com/v1/forecast?latitude=50.9997&longitude=6.8063&current=temperature_2m,weather_code&timezone=Europe%2FBerlin',
           { signal: controller.signal },
         )
-        if (!response.ok) {
-          return
-        }
+        if (!response.ok) return
         const payload = (await response.json()) as { current?: { temperature_2m?: number; weather_code?: number } }
-        if (!active || typeof payload.current?.temperature_2m !== 'number') {
-          return
-        }
+        if (!active || typeof payload.current?.temperature_2m !== 'number') return
         setWeather({
           temperature: Math.round(payload.current.temperature_2m),
           label: weatherLabels[payload.current.weather_code ?? 0] ?? 'Aktuell',
         })
       } catch {
-        if (active) {
-          setWeather(null)
-        }
+        if (active) setWeather(null)
       }
     }
 
@@ -72,35 +74,15 @@ const usePulheimWeather = () => {
   return weather
 }
 
-const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('')
-
-const avatarPalette = ['#d7897f', '#f9b95c', '#96c7b3', '#6398a9', '#8a6f5f']
-
-const avatarColor = (member: FamilyMembership | null | undefined) => {
-  const configured = member?.notification_preferences?.avatarColor
-  if (typeof configured === 'string') {
-    return configured
-  }
-  const seed = member?.display_name ?? member?.user_id ?? 'Familie'
-  const index = [...seed].reduce((total, char) => total + char.charCodeAt(0), 0) % avatarPalette.length
-  return avatarPalette[index]
-}
-
 const PhotoAvatar = ({ member, large = false }: { member?: FamilyMembership | null; large?: boolean }) => {
   const name = member?.display_name ?? 'Familie'
   return (
     <span
       className={`photo-avatar ${large ? 'photo-avatar-large' : ''}`}
-      style={{ '--avatar-color': avatarColor(member) } as CSSProperties}
+      style={{ '--avatar-color': memberAvatarColor(member) } as CSSProperties}
       title={name}
     >
-      {initials(name) || <UserRound size={large ? 22 : 14} />}
+      {memberInitials(member) || <UserRound size={large ? 22 : 14} />}
     </span>
   )
 }
@@ -117,9 +99,7 @@ const WeekRail = () => {
       <div className="week-rail-header">
         <h2>Woche</h2>
         <div>
-          <Button variant="ghost">
-            Diese Woche
-          </Button>
+          <Button variant="ghost">Diese Woche</Button>
           <Button variant="ghost" aria-label="Kalender öffnen">
             <CalendarDays size={17} />
           </Button>
@@ -156,6 +136,7 @@ export const AppShell = ({
   modeLabel?: string
 }) => {
   const { signOut, user, membership } = useAuth()
+  const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const weather = usePulheimWeather()
   const unread = data.notificationDeliveries.filter((delivery) => delivery.status !== 'read').length
@@ -166,53 +147,67 @@ export const AppShell = ({
   const mobileNavigation = mobileNavItemIds
     .map((id) => visibleNavigation.find((item) => item.id === id))
     .filter((item): item is (typeof visibleNavigation)[number] => Boolean(item))
+  const showWeekRail = location.pathname !== '/'
 
   return (
     <div className="app-shell">
       <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
         <div className="brand">
-          <PhotoAvatar member={currentMembership} large />
+          <span className="brand-mark-soft">K</span>
           <div>
-            <strong>Familien-Dashboard</strong>
-            <span>{currentMembership ? `${currentMembership.display_name} · ${currentMembership.email ?? data.family.name}` : data.family.name}</span>
+            <strong>Familie Klein</strong>
+            <span>{data.family.name}</span>
           </div>
-          <ChevronDown size={16} />
         </div>
+
         <nav className="nav-list" aria-label="Hauptnavigation">
-          {visibleNavigation.map((item) => {
-            const Icon = item.icon
+          {navigationGroups.map((group) => {
+            const items = group.ids
+              .map((id) => visibleNavigation.find((item) => item.id === id))
+              .filter((item): item is (typeof visibleNavigation)[number] => Boolean(item))
+            if (!items.length) return null
+
             return (
-              <NavLink key={item.path} to={item.path} onClick={() => setMobileOpen(false)}>
-                <Icon size={18} />
-                <span>{item.label}</span>
-                {item.path === '/meldungen' && unread > 0 && <em>{unread}</em>}
-              </NavLink>
+              <section key={group.label} className="nav-section" aria-label={group.label}>
+                <div className="nav-section-title">{group.label}</div>
+                {items.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <NavLink key={item.path} to={item.path} onClick={() => setMobileOpen(false)}>
+                      <Icon size={18} />
+                      <span>{item.label}</span>
+                      {item.path === '/meldungen' && unread > 0 && <em>{unread}</em>}
+                    </NavLink>
+                  )
+                })}
+              </section>
             )
           })}
         </nav>
-        <div className="sidebar-family-panel">
-          <div className="sidebar-family-header">
-            <span>Familie</span>
-            <NavLink to="/einstellungen" aria-label="Mitglied einladen">
-              <Plus size={15} />
-            </NavLink>
+
+        <div className="sidebar-status-card">
+          <div className="sidebar-weather-row">
+            <CloudSun size={26} />
+            <div>
+              <strong>{weather ? `${weather.temperature}°` : '--°'}</strong>
+              <span>{weather?.label ?? 'Wetter lädt'} · Pulheim</span>
+            </div>
           </div>
-          <div className="sidebar-photo-row">
-            {activeMembers.slice(0, 5).map((member) => (
-              <PhotoAvatar key={member.user_id} member={member} />
-            ))}
-          </div>
-          <div className="weather-widget">
-            <CloudSun size={22} />
-            <strong>{weather ? `${weather.temperature}°` : '--°'}</strong>
-            <span>Pulheim<br />{weather?.label ?? 'Wetter lädt'}</span>
+          <div className="sidebar-user-row">
+            <PhotoAvatar member={currentMembership} />
+            <div>
+              <strong>{currentMembership?.display_name ?? 'Familie'}</strong>
+              <span>{currentMembership ? 'angemeldet' : 'Demoansicht'}</span>
+            </div>
           </div>
         </div>
+
         <Button variant="ghost" onClick={signOut}>
           <LogOut size={18} />
           Abmelden
         </Button>
       </aside>
+
       <header className="mobile-topbar">
         <Button variant="ghost" aria-label="Navigation öffnen" onClick={() => setMobileOpen((value) => !value)}>
           {mobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -223,28 +218,30 @@ export const AppShell = ({
           {unread > 0 && <em>{unread}</em>}
         </NavLink>
       </header>
+
       <main className="main-content">
         {modeLabel && <div className="demo-banner">{modeLabel}</div>}
         <div className="app-topline">
-          <div className="search-shell">
-            <Search size={17} />
-            <span>Suchen...</span>
+          <div className="topline-date">{formatLongDate(new Date())}</div>
+          <div className="topline-actions">
+            <ThemeToggle compact />
+            <NavLink to="/meldungen" className="topline-icon" aria-label="Meldungen">
+              <Bell size={19} />
+              {unread > 0 && <em>{unread}</em>}
+            </NavLink>
+            <PhotoAvatar member={currentMembership} />
+            {currentMembership && (
+              <div className="topline-user">
+                <strong>{currentMembership.display_name}</strong>
+                <span>{currentMembership.role === 'admin' ? 'Admin' : currentMembership.email ?? 'angemeldet'}</span>
+              </div>
+            )}
           </div>
-          <NavLink to="/meldungen" className="topline-icon" aria-label="Meldungen">
-            <Bell size={19} />
-            {unread > 0 && <em>{unread}</em>}
-          </NavLink>
-          <PhotoAvatar member={currentMembership} />
-          {currentMembership && (
-            <div className="topline-user">
-              <strong>{currentMembership.display_name}</strong>
-              <span>{currentMembership.role === 'admin' ? 'Admin' : currentMembership.email ?? 'angemeldet'}</span>
-            </div>
-          )}
         </div>
-        <WeekRail />
+        {showWeekRail && <WeekRail />}
         <Outlet context={{ data, actions }} />
       </main>
+
       <nav className="bottom-nav">
         {mobileNavigation.map((item) => {
           const Icon = item.icon

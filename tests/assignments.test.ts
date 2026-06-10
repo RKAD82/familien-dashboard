@@ -6,6 +6,8 @@ import {
   assignmentPayloadForEvent,
   assignmentPayloadForTask,
   findMembership,
+  memberAvatarColor,
+  memberAvatarSoftColor,
   memberInitials,
 } from '../src/lib/assignments'
 import type { FamilyMembership } from '../src/types'
@@ -18,6 +20,7 @@ const members: FamilyMembership[] = [
     role: 'admin',
     display_name: 'Robin Klein',
     active: true,
+    notification_preferences: { avatarColor: 'robin' },
     visible_nav_items: null,
   },
   {
@@ -85,6 +88,12 @@ describe('Zuständigkeitsmodell', () => {
     expect(memberInitials(member)).toBe('RK')
     expect(assignmentLabel('Zuständig', member)).toBe('Zuständig: Robin Klein')
     expect(findMembership(members, null)).toBeNull()
+  })
+
+  it('liefert Personenfarben als CSS-Token statt als Hex-Wert', () => {
+    expect(memberAvatarColor(members[0])).toBe('var(--robin)')
+    expect(memberAvatarSoftColor(members[0])).toBe('var(--robin-soft)')
+    expect(memberAvatarColor({ ...members[1], notification_preferences: { avatarColor: '#ffffff' } })).toMatch(/^var\(--/)
   })
 })
 

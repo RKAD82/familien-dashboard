@@ -1,5 +1,6 @@
-import { Database, GitBranch, KeyRound, Mail, Save, Send, ShieldCheck, UserCheck, UserPlus } from 'lucide-react'
+import { Database, GitBranch, KeyRound, Mail, Palette, Save, Send, ShieldCheck, UserCheck, UserPlus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import { ThemeToggle } from '../components/ThemeToggle'
 import { Button, Card, Field, Select, Tag, TextInput } from '../components/ui'
 import { appConfig } from '../config'
 import { useAuth } from '../hooks/useAuth'
@@ -287,6 +288,15 @@ export const SettingsPage = () => {
           <strong>{currentMembership?.display_name ?? user?.email ?? 'Nicht angemeldet'}</strong>
           <span>{currentMembership?.login_name ? `Login: ${currentMembership.login_name}` : user?.email ?? 'Aktueller Zugang konnte nicht gelesen werden.'}</span>
           <Tag tone={isAdmin ? 'good' : 'neutral'}>{currentMembership ? roleLabel[currentMembership.role] : 'ohne Rolle'}</Tag>
+        </div>
+      </Card>
+
+      <Card title="Darstellung">
+        <div className="setup-card">
+          <Palette size={24} />
+          <strong>Hell, dunkel oder System</strong>
+          <span>Die Auswahl wird auf diesem Gerät gespeichert.</span>
+          <ThemeToggle />
         </div>
       </Card>
 

@@ -41,14 +41,25 @@ export const memberInitials = (member: Pick<FamilyMembership, 'display_name'> | 
 export const assignmentLabel = (label: string, member: Pick<FamilyMembership, 'display_name'> | null | undefined) =>
   member ? `${label}: ${member.display_name}` : null
 
-const avatarPalette = ['#d7897f', '#f9b95c', '#96c7b3', '#6398a9', '#8a6f5f']
+const personColorTokens = ['robin', 'nadja', 'melia', 'leonas'] as const
 
-export const memberAvatarColor = (member: FamilyMembership | null | undefined) => {
+const personColorToken = (member: FamilyMembership | null | undefined) => {
   const configured = member?.notification_preferences?.avatarColor
-  if (typeof configured === 'string') {
+  if (typeof configured === 'string' && personColorTokens.includes(configured as (typeof personColorTokens)[number])) {
     return configured
   }
+
   const seed = member?.display_name ?? member?.user_id ?? 'Familie'
-  const index = [...seed].reduce((total, char) => total + char.charCodeAt(0), 0) % avatarPalette.length
-  return avatarPalette[index]
+  const index = [...seed].reduce((total, char) => total + char.charCodeAt(0), 0) % personColorTokens.length
+  return personColorTokens[index]
+}
+
+export const memberAvatarColor = (member: FamilyMembership | null | undefined) => {
+  const token = personColorToken(member)
+  return `var(--${token})`
+}
+
+export const memberAvatarSoftColor = (member: FamilyMembership | null | undefined) => {
+  const token = personColorToken(member)
+  return `var(--${token}-soft)`
 }
