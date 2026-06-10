@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { CalendarDays, Plus } from 'lucide-react'
+import { AssignmentBadge } from '../components/AssignmentBadge'
 import { expandRecurringEvents, formatLongDate, formatTime, sortByDate, toDateKey } from '../lib/date'
+import { activeMemberships } from '../lib/assignments'
 import { useFamilyRoute } from '../routes/context'
 import { Button, Card, EmptyState, Field, Select, Tag, TextArea, TextInput } from '../components/ui'
 
@@ -18,6 +20,9 @@ export const CalendarPage = () => {
   const [category, setCategory] = useState('Familie')
   const [location, setLocation] = useState('')
   const [notes, setNotes] = useState('')
+  const [assigneeMembershipId, setAssigneeMembershipId] = useState('')
+  const [bringMembershipId, setBringMembershipId] = useState('')
+  const [pickupMembershipId, setPickupMembershipId] = useState('')
   const [repeatWeekly, setRepeatWeekly] = useState(false)
   const [important, setImportant] = useState(false)
   const [notify, setNotify] = useState(false)
@@ -26,6 +31,7 @@ export const CalendarPage = () => {
   const yearEvents = expandRecurringEvents(data.events, new Date(year, 0, 1), new Date(year + 1, 0, 1))
   const selectedEvents = sortByDate(yearEvents.filter((event) => toDateKey(event.starts_at) === selectedDate))
   const editingEvent = editingEventId ? data.events.find((event) => event.id === editingEventId) ?? null : null
+  const assignableMembers = activeMemberships(data.memberships)
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -39,6 +45,9 @@ export const CalendarPage = () => {
       ends_at: !allDay && endTime ? localDateTimeToIso(selectedDate, endTime) : null,
       all_day: allDay,
       recurrence_rule: repeatWeekly ? 'FREQ=WEEKLY' : null,
+      assignee_membership_id: assigneeMembershipId || null,
+      bring_membership_id: bringMembershipId || null,
+      pickup_membership_id: pickupMembershipId || null,
       category,
       location: location.trim() || null,
       notes: notes.trim() || null,
@@ -56,6 +65,9 @@ export const CalendarPage = () => {
     setEndTime('')
     setLocation('')
     setNotes('')
+    setAssigneeMembershipId('')
+    setBringMembershipId('')
+    setPickupMembershipId('')
     setRepeatWeekly(false)
     setImportant(false)
     setNotify(false)
@@ -76,6 +88,9 @@ export const CalendarPage = () => {
     setCategory(source.category)
     setLocation(source.location ?? '')
     setNotes(source.notes ?? '')
+    setAssigneeMembershipId(source.assignee_membership_id ?? '')
+    setBringMembershipId(source.bring_membership_id ?? '')
+    setPickupMembershipId(source.pickup_membership_id ?? '')
     setRepeatWeekly(Boolean(source.recurrence_rule))
     setImportant(source.is_important)
     setNotify(source.notify_family)
@@ -134,6 +149,38 @@ export const CalendarPage = () => {
           <Field label="Ort">
             <TextInput value={location} onChange={(event) => setLocation(event.target.value)} />
           </Field>
+          <Field label="Zuständig">
+            <Select value={assigneeMembershipId} onChange={(event) => setAssigneeMembershipId(event.target.value)}>
+              <option value="">Nicht festgelegt</option>
+              {assignableMembers.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.display_name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <div className="two-column-fields">
+            <Field label="Bringt">
+              <Select value={bringMembershipId} onChange={(event) => setBringMembershipId(event.target.value)}>
+                <option value="">Nicht festgelegt</option>
+                {assignableMembers.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.display_name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Holt">
+              <Select value={pickupMembershipId} onChange={(event) => setPickupMembershipId(event.target.value)}>
+                <option value="">Nicht festgelegt</option>
+                {assignableMembers.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.display_name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </div>
           <Field label="Notiz">
             <TextArea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} />
           </Field>
@@ -167,6 +214,11 @@ export const CalendarPage = () => {
                   <strong>{event.title}</strong>
                   <small>{event.location || event.category}</small>
                   {event.notes && <small>{event.notes}</small>}
+                  <div className="assignment-row">
+                    <AssignmentBadge label="Zuständig" membershipId={event.assignee_membership_id} memberships={data.memberships} />
+                    <AssignmentBadge label="Bringt" membershipId={event.bring_membership_id} memberships={data.memberships} />
+                    <AssignmentBadge label="Holt" membershipId={event.pickup_membership_id} memberships={data.memberships} />
+                  </div>
                 </div>
                 {event.is_important && <Tag tone="warn">wichtig</Tag>}
                 <div className="inline-actions">

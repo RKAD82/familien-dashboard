@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { CheckCircle2, Plus, RotateCcw, Trash2 } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
+import { AssignmentBadge } from '../components/AssignmentBadge'
+import { activeMemberships } from '../lib/assignments'
 import { formatLongDate, formatTime, openTasks } from '../lib/date'
 import { useFamilyRoute } from '../routes/context'
-import { Button, Card, Field, Tag, TextArea, TextInput } from '../components/ui'
+import { Button, Card, Field, Select, Tag, TextArea, TextInput } from '../components/ui'
 
 const formatTaskDate = (value: string | null) => (value ? `${formatLongDate(value)}, ${formatTime(value)} Uhr` : 'ohne Fälligkeit')
 
@@ -13,6 +15,7 @@ export const TasksPage = () => {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [dueAt, setDueAt] = useState('')
+  const [assigneeMembershipId, setAssigneeMembershipId] = useState('')
   const [category, setCategory] = useState('Familie')
   const [important, setImportant] = useState(false)
   const [notify, setNotify] = useState(false)
@@ -22,6 +25,7 @@ export const TasksPage = () => {
   const tasks = openTasks(data.tasks)
   const done = data.tasks.filter((task) => task.status === 'done')
   const selectedTask = data.tasks.find((task) => task.id === selectedTaskId) ?? tasks[0] ?? done[0]
+  const assignableMembers = activeMemberships(data.memberships)
   const categoryOptions = useMemo(
     () =>
       Array.from(new Set(['Familie', 'Haushalt', 'Schule/Kita', 'Gesundheit', 'Besorgung', ...data.tasks.map((task) => task.category)])).sort(
@@ -47,6 +51,7 @@ export const TasksPage = () => {
       title: title.trim(),
       description: description.trim() || null,
       due_at: dueAt ? new Date(dueAt).toISOString() : null,
+      assignee_membership_id: assigneeMembershipId || null,
       category: category.trim() || 'Familie',
       is_important: important,
       notify_family: notify,
@@ -54,6 +59,7 @@ export const TasksPage = () => {
     setTitle('')
     setDescription('')
     setDueAt('')
+    setAssigneeMembershipId('')
     setImportant(false)
     setNotify(false)
   }
@@ -73,6 +79,7 @@ export const TasksPage = () => {
     setTitle(selectedTask.title)
     setDescription(selectedTask.description ?? '')
     setDueAt(selectedTask.due_at ? selectedTask.due_at.slice(0, 16) : '')
+    setAssigneeMembershipId(selectedTask.assignee_membership_id ?? '')
     setCategory(selectedTask.category)
     setImportant(selectedTask.is_important)
     setNotify(selectedTask.notify_family)
@@ -85,6 +92,7 @@ export const TasksPage = () => {
       title: title.trim(),
       description: description.trim() || null,
       due_at: dueAt ? new Date(dueAt).toISOString() : null,
+      assignee_membership_id: assigneeMembershipId || null,
       category: category.trim() || 'Familie',
       is_important: important,
       notify_family: notify,
@@ -93,6 +101,7 @@ export const TasksPage = () => {
     setTitle('')
     setDescription('')
     setDueAt('')
+    setAssigneeMembershipId('')
     setImportant(false)
     setNotify(false)
     setEditing(false)
@@ -118,6 +127,16 @@ export const TasksPage = () => {
             </Field>
             <Field label="Fälligkeit">
               <TextInput type="datetime-local" value={dueAt} onChange={(event) => setDueAt(event.target.value)} />
+            </Field>
+            <Field label="Zuständig">
+              <Select value={assigneeMembershipId} onChange={(event) => setAssigneeMembershipId(event.target.value)}>
+                <option value="">Nicht festgelegt</option>
+                {assignableMembers.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.display_name}
+                  </option>
+                ))}
+              </Select>
             </Field>
             <Field label="Kategorie">
               <TextInput list="task-categories" value={category} onChange={(event) => setCategory(event.target.value)} />
@@ -159,6 +178,7 @@ export const TasksPage = () => {
                 <button className="task-open-button" type="button" onClick={() => setSelectedTaskId(task.id)}>
                   <strong>{task.title}</strong>
                   <span>{task.description || task.category}</span>
+                  <AssignmentBadge compact label="Zuständig" membershipId={task.assignee_membership_id} memberships={data.memberships} />
                 </button>
                 {task.is_important && <Tag tone="warn">wichtig</Tag>}
                 {task.notify_family && <Tag tone="info">Meldung</Tag>}
@@ -181,6 +201,9 @@ export const TasksPage = () => {
                 <Tag>{selectedTask.category}</Tag>
                 <Tag tone={selectedTask.status === 'done' ? 'good' : 'info'}>{selectedTask.status === 'done' ? 'erledigt' : 'offen'}</Tag>
                 {selectedTask.is_important && <Tag tone="warn">wichtig</Tag>}
+              </div>
+              <div className="assignment-row">
+                <AssignmentBadge label="Zuständig" membershipId={selectedTask.assignee_membership_id} memberships={data.memberships} />
               </div>
               <span className="muted">{formatTaskDate(selectedTask.due_at)}</span>
               <div className="action-row">

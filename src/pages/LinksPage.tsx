@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { ExternalLink, Plus, Star } from 'lucide-react'
+import { ExternalLink, Pencil, Plus, Star, X } from 'lucide-react'
 import { useFamilyRoute } from '../routes/context'
 import { Button, Card, EmptyState, Field, Select, Tag, TextInput } from '../components/ui'
+import type { FamilyLink } from '../types'
 
 const normalizeUrl = (value: string) => {
   const trimmed = value.trim()
@@ -18,7 +19,26 @@ export const LinksPage = () => {
   const [url, setUrl] = useState('')
   const [description, setDescription] = useState('')
   const [favorite, setFavorite] = useState(true)
+  const [editingLink, setEditingLink] = useState<FamilyLink | null>(null)
   const activeCollection = data.linkCollections.find((collection) => collection.id === collectionId) ?? data.linkCollections[0]
+
+  const resetForm = () => {
+    setEditingLink(null)
+    setTitle('')
+    setUrl('')
+    setDescription('')
+    setFavorite(true)
+    setCollectionId(data.linkCollections[0]?.id ?? '')
+  }
+
+  const startEdit = (link: FamilyLink) => {
+    setEditingLink(link)
+    setCollectionId(link.collection_id)
+    setTitle(link.title)
+    setUrl(link.url)
+    setDescription(link.description ?? '')
+    setFavorite(link.favorite)
+  }
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -26,7 +46,7 @@ export const LinksPage = () => {
       return
     }
 
-    await actions.createLink({
+    const input = {
       collection_id: activeCollection.id,
       title: title.trim(),
       url: normalizeUrl(url),
@@ -34,11 +54,14 @@ export const LinksPage = () => {
       favorite,
       is_important: false,
       notify_family: false,
-    })
-    setTitle('')
-    setUrl('')
-    setDescription('')
-    setFavorite(true)
+    }
+
+    if (editingLink) {
+      await actions.updateLink(editingLink, input)
+    } else {
+      await actions.createLink(input)
+    }
+    resetForm()
   }
 
   return (
@@ -50,7 +73,17 @@ export const LinksPage = () => {
         </div>
       </section>
 
-      <Card title="Link anlegen">
+      <Card
+        title={editingLink ? 'Link bearbeiten' : 'Link anlegen'}
+        action={
+          editingLink ? (
+            <button type="button" className="text-button" onClick={resetForm}>
+              <X size={16} />
+              Abbrechen
+            </button>
+          ) : null
+        }
+      >
         {activeCollection ? (
           <form className="form-stack" onSubmit={onSubmit}>
             <Field label="Sammlung">
@@ -76,8 +109,8 @@ export const LinksPage = () => {
               Als Favorit anzeigen
             </label>
             <Button type="submit">
-              <Plus size={18} />
-              Link speichern
+              {editingLink ? <Pencil size={18} /> : <Plus size={18} />}
+              {editingLink ? 'Änderungen speichern' : 'Link speichern'}
             </Button>
           </form>
         ) : (
@@ -93,17 +126,27 @@ export const LinksPage = () => {
               {links.length ? (
                 <div className="link-list">
                   {links.map((link) => (
-                    <a key={link.id} href={link.url} target="_blank" rel="noreferrer">
-                      <div>
-                        <strong>
-                          {link.favorite && <Star size={14} />}
-                          {link.title}
-                        </strong>
-                        <span>{link.description || link.url}</span>
+                    <article key={link.id} className="link-row">
+                      <a className="link-main" href={link.url} target="_blank" rel="noreferrer">
+                        <div>
+                          <strong>
+                            {link.favorite && <Star size={14} />}
+                            {link.title}
+                          </strong>
+                          <span>{link.description || link.url}</span>
+                        </div>
+                        {link.is_important && <Tag tone="warn">wichtig</Tag>}
+                        <ExternalLink size={16} />
+                      </a>
+                      <div className="inline-actions">
+                        <button type="button" onClick={() => startEdit(link)}>
+                          Bearbeiten
+                        </button>
+                        <button type="button" onClick={() => void actions.deleteLink(link)}>
+                          Löschen
+                        </button>
                       </div>
-                      {link.is_important && <Tag tone="warn">wichtig</Tag>}
-                      <ExternalLink size={16} />
-                    </a>
+                    </article>
                   ))}
                 </div>
               ) : (

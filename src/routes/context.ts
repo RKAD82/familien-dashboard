@@ -21,6 +21,9 @@ export type CreateEventInput = Pick<
   | 'ends_at'
   | 'all_day'
   | 'recurrence_rule'
+  | 'assignee_membership_id'
+  | 'bring_membership_id'
+  | 'pickup_membership_id'
   | 'category'
   | 'location'
   | 'notes'
@@ -35,6 +38,10 @@ export type CreateLinkInput = Pick<
   FamilyLink,
   'collection_id' | 'title' | 'url' | 'description' | 'favorite' | 'is_important' | 'notify_family'
 >
+
+export type UpdateLinkInput = CreateLinkInput
+
+export type NoteInput = Pick<NoteItem, 'title' | 'body' | 'category' | 'visibility' | 'is_important' | 'notify_family'>
 
 export type CreateFamilyContactInput = Pick<
   FamilyContact,
@@ -69,11 +76,14 @@ export interface FamilyActions {
   updateEvent: (event: EventItem, input: CreateEventInput) => Promise<void>
   deleteEvent: (event: EventItem) => Promise<void>
   createTask: (
-    input: Pick<TaskItem, 'title' | 'description' | 'due_at' | 'category' | 'is_important' | 'notify_family'>,
+    input: Pick<TaskItem, 'title' | 'description' | 'due_at' | 'assignee_membership_id' | 'category' | 'is_important' | 'notify_family'>,
   ) => Promise<void>
   updateTask: (
     task: TaskItem,
-    input: Pick<TaskItem, 'title' | 'description' | 'due_at' | 'category' | 'is_important' | 'notify_family' | 'status'>,
+    input: Pick<
+      TaskItem,
+      'title' | 'description' | 'due_at' | 'assignee_membership_id' | 'category' | 'is_important' | 'notify_family' | 'status'
+    >,
   ) => Promise<void>
   updateTaskStatus: (task: TaskItem, status: TaskItem['status']) => Promise<void>
   deleteTask: (task: TaskItem) => Promise<void>
@@ -88,15 +98,17 @@ export interface FamilyActions {
   clearShoppingList: (listId: string, checkedOnly: boolean) => Promise<void>
   resetDemoData?: () => Promise<void>
   createLink: (input: CreateLinkInput) => Promise<void>
+  updateLink: (link: FamilyLink, input: UpdateLinkInput) => Promise<void>
+  deleteLink: (link: FamilyLink) => Promise<void>
   createFamilyContact: (input: CreateFamilyContactInput) => Promise<void>
   updateFamilyContact: (contact: FamilyContact, input: CreateFamilyContactInput) => Promise<void>
   deleteFamilyContact: (contact: FamilyContact) => Promise<void>
   createEmergencyItem: (input: CreateEmergencyItemInput) => Promise<void>
   updateEmergencyItem: (item: EmergencyItem, input: CreateEmergencyItemInput) => Promise<void>
   deleteEmergencyItem: (item: EmergencyItem) => Promise<void>
-  createNote: (
-    input: Pick<NoteItem, 'title' | 'body' | 'category' | 'visibility' | 'is_important' | 'notify_family'>,
-  ) => Promise<void>
+  createNote: (input: NoteInput) => Promise<void>
+  updateNote: (note: NoteItem, input: NoteInput) => Promise<void>
+  deleteNote: (note: NoteItem) => Promise<void>
   markNotificationRead: (delivery: NotificationDelivery) => Promise<void>
   addRecipeToShoppingList: (listId: string, recipeId: string) => Promise<void>
   archiveRecipe: (recipeId: string, archived: boolean) => Promise<void>

@@ -1,5 +1,14 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import { publicBasePath } from '../config'
+import { assignmentPayloadForEvent, assignmentPayloadForTask } from '../lib/assignments'
+import {
+  deleteFamilyLinkRecord,
+  deleteFamilyNoteRecord,
+  updateFamilyLinkRecord,
+  updateFamilyNoteRecord,
+  type UpdateFamilyLinkInput,
+  type UpdateFamilyNoteInput,
+} from '../lib/familyCrud'
 import { requireSupabase, supabase } from '../lib/supabase'
 import type {
   ActivitySuggestion,
@@ -265,6 +274,9 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
           | 'ends_at'
           | 'all_day'
           | 'recurrence_rule'
+          | 'assignee_membership_id'
+          | 'bring_membership_id'
+          | 'pickup_membership_id'
           | 'category'
           | 'location'
           | 'notes'
@@ -278,7 +290,7 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         }
         const { data: event, error: eventError } = await client
           .from('events')
-          .insert({ ...input, family_id: familyId, created_by: userId })
+          .insert({ ...input, ...assignmentPayloadForEvent(input), family_id: familyId, created_by: userId })
           .select()
           .single()
 
@@ -309,6 +321,9 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
           | 'ends_at'
           | 'all_day'
           | 'recurrence_rule'
+          | 'assignee_membership_id'
+          | 'bring_membership_id'
+          | 'pickup_membership_id'
           | 'category'
           | 'location'
           | 'notes'
@@ -317,7 +332,10 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         >,
       ) => {
         const client = requireSupabase()
-        const { error: updateError } = await client.from('events').update({ ...input, updated_at: new Date().toISOString() }).eq('id', event.id)
+        const { error: updateError } = await client
+          .from('events')
+          .update({ ...input, ...assignmentPayloadForEvent(input), updated_at: new Date().toISOString() })
+          .eq('id', event.id)
         if (updateError) {
           throw updateError
         }
@@ -331,14 +349,22 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         }
         await loadData()
       },
-      createTask: async (input: Pick<TaskItem, 'title' | 'description' | 'due_at' | 'category' | 'is_important' | 'notify_family'>) => {
+      createTask: async (
+        input: Pick<TaskItem, 'title' | 'description' | 'due_at' | 'assignee_membership_id' | 'category' | 'is_important' | 'notify_family'>,
+      ) => {
         const client = requireSupabase()
         if (!familyId) {
           return
         }
         const { data: task, error: taskError } = await client
           .from('tasks')
-          .insert({ ...input, family_id: familyId, status: input.due_at ? 'today' : 'open', created_by: userId })
+          .insert({
+            ...input,
+            ...assignmentPayloadForTask(input),
+            family_id: familyId,
+            status: input.due_at ? 'today' : 'open',
+            created_by: userId,
+          })
           .select()
           .single()
 
@@ -362,10 +388,16 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       },
       updateTask: async (
         task: TaskItem,
-        input: Pick<TaskItem, 'title' | 'description' | 'due_at' | 'category' | 'is_important' | 'notify_family' | 'status'>,
+        input: Pick<
+          TaskItem,
+          'title' | 'description' | 'due_at' | 'assignee_membership_id' | 'category' | 'is_important' | 'notify_family' | 'status'
+        >,
       ) => {
         const client = requireSupabase()
-        const { error: updateError } = await client.from('tasks').update({ ...input, updated_at: new Date().toISOString() }).eq('id', task.id)
+        const { error: updateError } = await client
+          .from('tasks')
+          .update({ ...input, ...assignmentPayloadForTask(input), updated_at: new Date().toISOString() })
+          .eq('id', task.id)
         if (updateError) {
           throw updateError
         }
@@ -534,6 +566,16 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         }
         await loadData()
       },
+      updateLink: async (link: FamilyLink, input: UpdateFamilyLinkInput) => {
+        const client = requireSupabase()
+        await updateFamilyLinkRecord(client, link, input)
+        await loadData()
+      },
+      deleteLink: async (link: FamilyLink) => {
+        const client = requireSupabase()
+        await deleteFamilyLinkRecord(client, link)
+        await loadData()
+      },
       createFamilyContact: async (
         input: Pick<FamilyContact, 'name' | 'relation' | 'phone' | 'mobile' | 'email' | 'address' | 'notes' | 'favorite'>,
       ) => {
@@ -639,6 +681,16 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
             p_priority: input.notify_family ? 'urgent' : 'important',
           })
         }
+        await loadData()
+      },
+      updateNote: async (note: NoteItem, input: UpdateFamilyNoteInput) => {
+        const client = requireSupabase()
+        await updateFamilyNoteRecord(client, note, userId, input)
+        await loadData()
+      },
+      deleteNote: async (note: NoteItem) => {
+        const client = requireSupabase()
+        await deleteFamilyNoteRecord(client, note)
         await loadData()
       },
       markNotificationRead: async (delivery: NotificationDelivery) => {

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CalendarDays } from 'lucide-react'
+import { AssignmentBadge } from '../components/AssignmentBadge'
 import { addDays, currentWeekDays, expandRecurringEvents, formatDay, formatLongDate, formatTime, isInCurrentWeek, toDateKey } from '../lib/date'
 import { useFamilyRoute } from '../routes/context'
 import { Card, EmptyState, Tag } from '../components/ui'
@@ -67,6 +68,11 @@ export const WeekPage = () => {
                 <span>{event.all_day ? 'ganztags' : formatTime(event.starts_at)}</span>
                 <strong>{event.title}</strong>
                 <small>{event.location || event.category}</small>
+                <div className="assignment-row">
+                  <AssignmentBadge compact label="Zuständig" membershipId={event.assignee_membership_id} memberships={data.memberships} />
+                  <AssignmentBadge compact label="Bringt" membershipId={event.bring_membership_id} memberships={data.memberships} />
+                  <AssignmentBadge compact label="Holt" membershipId={event.pickup_membership_id} memberships={data.memberships} />
+                </div>
                 {event.is_important && <Tag tone="warn">wichtig</Tag>}
               </article>
             ))}
@@ -75,6 +81,7 @@ export const WeekPage = () => {
                 <span>Aufgabe</span>
                 <strong>{task.title}</strong>
                 <small>{task.description || task.category}</small>
+                <AssignmentBadge compact label="Zuständig" membershipId={task.assignee_membership_id} memberships={data.memberships} />
                 {task.is_important && <Tag tone="warn">wichtig</Tag>}
               </article>
             ))}

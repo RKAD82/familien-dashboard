@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { Plus, StickyNote, X } from 'lucide-react'
+import { Pencil, Plus, StickyNote, Trash2, X } from 'lucide-react'
 import { useFamilyRoute } from '../routes/context'
 import { Button, Card, Field, Select, Tag, TextArea, TextInput } from '../components/ui'
+import type { NoteItem } from '../types'
 
 const excerpt = (value: string) => (value.length > 170 ? `${value.slice(0, 170)}...` : value)
 
@@ -14,7 +15,40 @@ export const NotesPage = () => {
   const [important, setImportant] = useState(false)
   const [notify, setNotify] = useState(false)
   const [selectedNoteId, setSelectedNoteId] = useState(data.notes[0]?.id ?? '')
+  const [editingNote, setEditingNote] = useState<NoteItem | null>(null)
   const selectedNote = data.notes.find((note) => note.id === selectedNoteId)
+
+  const resetForm = () => {
+    setEditingNote(null)
+    setTitle('')
+    setBody('')
+    setCategory('Familie')
+    setVisibility('family')
+    setImportant(false)
+    setNotify(false)
+  }
+
+  const startEdit = (note: NoteItem) => {
+    setEditingNote(note)
+    setSelectedNoteId(note.id)
+    setTitle(note.title)
+    setBody(note.body)
+    setCategory(note.category)
+    setVisibility(note.visibility)
+    setImportant(note.is_important)
+    setNotify(note.notify_family)
+  }
+
+  const deleteSelectedNote = async () => {
+    if (!selectedNote) {
+      return
+    }
+    await actions.deleteNote(selectedNote)
+    if (editingNote?.id === selectedNote.id) {
+      resetForm()
+    }
+    setSelectedNoteId('')
+  }
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -22,18 +56,22 @@ export const NotesPage = () => {
       return
     }
 
-    await actions.createNote({
+    const input = {
       title: title.trim(),
       body: body.trim(),
       category,
       visibility,
       is_important: important,
       notify_family: notify,
-    })
-    setTitle('')
-    setBody('')
-    setImportant(false)
-    setNotify(false)
+    }
+
+    if (editingNote) {
+      await actions.updateNote(editingNote, input)
+      setSelectedNoteId(editingNote.id)
+    } else {
+      await actions.createNote(input)
+    }
+    resetForm()
   }
 
   return (
@@ -45,7 +83,17 @@ export const NotesPage = () => {
         </div>
       </section>
 
-      <Card title="Neue Notiz">
+      <Card
+        title={editingNote ? 'Notiz bearbeiten' : 'Neue Notiz'}
+        action={
+          editingNote ? (
+            <button type="button" className="text-button" onClick={resetForm}>
+              <X size={16} />
+              Abbrechen
+            </button>
+          ) : null
+        }
+      >
         <form className="form-stack" onSubmit={onSubmit}>
           <Field label="Titel">
             <TextInput value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -72,8 +120,8 @@ export const NotesPage = () => {
             Familie benachrichtigen
           </label>
           <Button type="submit">
-            <Plus size={18} />
-            Notiz speichern
+            {editingNote ? <Pencil size={18} /> : <Plus size={18} />}
+            {editingNote ? 'Änderungen speichern' : 'Notiz speichern'}
           </Button>
         </form>
       </Card>
@@ -91,9 +139,18 @@ export const NotesPage = () => {
                   {selectedNote.is_important && <Tag tone="warn">wichtig</Tag>}
                 </div>
               </div>
-              <Button variant="ghost" aria-label="Notiz schließen" onClick={() => setSelectedNoteId('')}>
-                <X size={18} />
-              </Button>
+              <div className="inline-actions">
+                <button type="button" onClick={() => startEdit(selectedNote)}>
+                  Bearbeiten
+                </button>
+                <button type="button" onClick={() => void deleteSelectedNote()}>
+                  <Trash2 size={14} />
+                  Löschen
+                </button>
+                <button type="button" aria-label="Notiz schließen" onClick={() => setSelectedNoteId('')}>
+                  <X size={14} />
+                </button>
+              </div>
             </div>
             <p>{selectedNote.body}</p>
           </article>
@@ -112,6 +169,7 @@ export const NotesPage = () => {
               <div className="tag-row">
                 <Tag>{note.category}</Tag>
                 {note.visibility === 'adults' && <Tag tone="info">Erwachsene</Tag>}
+                {note.visibility === 'private' && <Tag tone="info">Privat</Tag>}
                 {note.is_important && <Tag tone="warn">wichtig</Tag>}
               </div>
             </div>

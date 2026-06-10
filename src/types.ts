@@ -45,6 +45,7 @@ export interface Family {
 }
 
 export interface FamilyMembership {
+  id: string
   family_id: string
   user_id: string
   role: Role
@@ -75,6 +76,9 @@ export interface EventItem {
   ends_at: string | null
   all_day: boolean
   recurrence_rule: string | null
+  assignee_membership_id: string | null
+  bring_membership_id: string | null
+  pickup_membership_id: string | null
   category: string
   location: string | null
   notes: string | null
@@ -92,6 +96,7 @@ export interface TaskItem {
   status: EntityStatus
   due_at: string | null
   assigned_to: string | null
+  assignee_membership_id: string | null
   category: string
   recurrence_rule: string | null
   linked_event_id: string | null

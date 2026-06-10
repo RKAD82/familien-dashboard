@@ -42,6 +42,9 @@ export const DemoApp = () => {
               ends_at: input.ends_at,
               all_day: input.all_day,
               recurrence_rule: input.recurrence_rule,
+              assignee_membership_id: input.assignee_membership_id,
+              bring_membership_id: input.bring_membership_id,
+              pickup_membership_id: input.pickup_membership_id,
               category: input.category,
               location: input.location,
               notes: input.notes,
@@ -74,6 +77,7 @@ export const DemoApp = () => {
               status: input.due_at ? 'today' : 'open',
               due_at: input.due_at,
               assigned_to: null,
+              assignee_membership_id: input.assignee_membership_id,
               category: input.category,
               recurrence_rule: null,
               linked_event_id: null,
@@ -217,6 +221,18 @@ export const DemoApp = () => {
           ],
         }))
       },
+      updateLink: async (link, input) => {
+        setData((current) => ({
+          ...current,
+          links: current.links.map((entry) => (entry.id === link.id ? { ...entry, ...input } : entry)),
+        }))
+      },
+      deleteLink: async (link) => {
+        setData((current) => ({
+          ...current,
+          links: current.links.filter((entry) => entry.id !== link.id),
+        }))
+      },
       createFamilyContact: async (input) => {
         setData((current) => ({
           ...current,
@@ -295,6 +311,20 @@ export const DemoApp = () => {
             } satisfies NoteItem,
             ...current.notes,
           ],
+        }))
+      },
+      updateNote: async (note, input) => {
+        setData((current) => ({
+          ...current,
+          notes: current.notes.map((entry) =>
+            entry.id === note.id ? { ...entry, ...input, updated_by: 'demo-user', updated_at: new Date().toISOString() } : entry,
+          ),
+        }))
+      },
+      deleteNote: async (note) => {
+        setData((current) => ({
+          ...current,
+          notes: current.notes.filter((entry) => entry.id !== note.id),
         }))
       },
       markNotificationRead: async (delivery) => {

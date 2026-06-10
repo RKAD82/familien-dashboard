@@ -1,5 +1,6 @@
 ﻿import { Bell, CalendarPlus, CheckCircle2, ShoppingCart } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { AssignmentBadge } from '../components/AssignmentBadge'
 import { expandRecurringEvents, formatDay, formatTime, openTasks, sortByDate, tasksDueToday } from '../lib/date'
 import { getUpcomingWasteEvents } from '../lib/waste'
 import { useFamilyRoute } from '../routes/context'
@@ -44,6 +45,11 @@ export const TodayPage = () => {
                 <div>
                   <strong>{event.title}</strong>
                   <small>{event.location || event.category}</small>
+                  <div className="assignment-row">
+                    <AssignmentBadge compact label="Zuständig" membershipId={event.assignee_membership_id} memberships={data.memberships} />
+                    <AssignmentBadge compact label="Bringt" membershipId={event.bring_membership_id} memberships={data.memberships} />
+                    <AssignmentBadge compact label="Holt" membershipId={event.pickup_membership_id} memberships={data.memberships} />
+                  </div>
                 </div>
                 {event.is_important && <Tag tone="warn">wichtig</Tag>}
               </article>
@@ -61,6 +67,7 @@ export const TodayPage = () => {
               <Link key={task.id} to={`/aufgaben?task=${task.id}`} className="task-row">
                 <CheckCircle2 size={18} />
                 <span>{task.title}</span>
+                <AssignmentBadge compact label="Zuständig" membershipId={task.assignee_membership_id} memberships={data.memberships} />
               </Link>
             ))}
           </div>
@@ -78,6 +85,7 @@ export const TodayPage = () => {
                 <div>
                   <strong>{task.title}</strong>
                   <span>{task.description || task.category}</span>
+                  <AssignmentBadge compact label="Zuständig" membershipId={task.assignee_membership_id} memberships={data.memberships} />
                 </div>
               </Link>
             ))}
