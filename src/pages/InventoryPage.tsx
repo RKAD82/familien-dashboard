@@ -8,7 +8,7 @@ const inventoryAreas = [
 ]
 
 export const InventoryPage = () => (
-  <div className="page-grid house-page">
+  <div className="page-grid house-page inventory-page">
     <section className="page-title span-3">
       <div>
         <h1>Inventar</h1>

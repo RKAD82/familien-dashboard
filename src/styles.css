@@ -700,8 +700,109 @@ code {
 .page-grid,
 .page-stack,
 .tasks-page {
+  --page-accent: var(--robin);
+  --page-accent-soft: var(--robin-soft);
   width: min(100%, 1180px);
   margin: 0 auto;
+}
+
+.week-page {
+  --page-accent: #426f85;
+  --page-accent-soft: #e3eef3;
+}
+
+.calendar-page {
+  --page-accent: #705d9b;
+  --page-accent-soft: #eee9f7;
+}
+
+.tasks-page {
+  --page-accent: var(--urgent);
+  --page-accent-soft: var(--urgent-soft);
+}
+
+.shopping-page {
+  --page-accent: #a56f2b;
+  --page-accent-soft: #f4ead8;
+}
+
+.links-page {
+  --page-accent: var(--robin);
+  --page-accent-soft: var(--robin-soft);
+}
+
+.notes-page {
+  --page-accent: #74683c;
+  --page-accent-soft: #efecd9;
+}
+
+.waste-page {
+  --page-accent: #4f8256;
+  --page-accent-soft: #e4f0e5;
+}
+
+.recipes-page {
+  --page-accent: #647d3e;
+  --page-accent-soft: #e8efdc;
+}
+
+.activities-page {
+  --page-accent: #9a5d76;
+  --page-accent-soft: #f1e3ea;
+}
+
+.inventory-page {
+  --page-accent: #586b73;
+  --page-accent-soft: #e7edef;
+}
+
+.insurance-page {
+  --page-accent: #4e6d9a;
+  --page-accent-soft: #e4ebf5;
+}
+
+.contacts-page {
+  --page-accent: #476d92;
+  --page-accent-soft: #e3edf5;
+}
+
+.emergency-page {
+  --page-accent: var(--urgent);
+  --page-accent-soft: var(--urgent-soft);
+}
+
+.notifications-page {
+  --page-accent: #6e659c;
+  --page-accent-soft: #ece8f7;
+}
+
+.profile-page {
+  --page-accent: var(--robin);
+  --page-accent-soft: var(--robin-soft);
+}
+
+.settings-page {
+  --page-accent: #505f68;
+  --page-accent-soft: #e7ecef;
+}
+
+[data-theme="dark"] .week-page,
+[data-theme="dark"] .calendar-page,
+[data-theme="dark"] .tasks-page,
+[data-theme="dark"] .shopping-page,
+[data-theme="dark"] .links-page,
+[data-theme="dark"] .notes-page,
+[data-theme="dark"] .waste-page,
+[data-theme="dark"] .recipes-page,
+[data-theme="dark"] .activities-page,
+[data-theme="dark"] .inventory-page,
+[data-theme="dark"] .insurance-page,
+[data-theme="dark"] .contacts-page,
+[data-theme="dark"] .emergency-page,
+[data-theme="dark"] .notifications-page,
+[data-theme="dark"] .profile-page,
+[data-theme="dark"] .settings-page {
+  --page-accent-soft: color-mix(in srgb, var(--page-accent) 18%, var(--panel));
 }
 
 .page-grid {
@@ -717,16 +818,39 @@ code {
 }
 
 .page-title {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--page-accent) 22%, var(--border));
+  border-radius: var(--r-lg);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--page-accent-soft) 72%, var(--panel)) 0%, var(--panel) 58%),
+    var(--panel);
+  box-shadow: var(--shadow);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
-  min-height: 62px;
+  min-height: 126px;
+  padding: clamp(1rem, 2vw, 1.35rem);
+}
+
+.page-title::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 7px;
+  background: var(--page-accent);
+}
+
+.page-title > div {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
 }
 
 .page-title h1 {
   color: var(--text);
-  font-size: 2rem;
+  font-size: clamp(2rem, 3vw, 2.55rem);
   font-weight: 700;
   line-height: 1.12;
 }
@@ -740,11 +864,20 @@ code {
 }
 
 .page-actions {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0.65rem;
+  max-width: 430px;
+}
+
+.page-actions .tag {
+  border-color: color-mix(in srgb, var(--page-accent) 26%, var(--border));
+  background: color-mix(in srgb, var(--page-accent-soft) 70%, var(--panel));
+  color: color-mix(in srgb, var(--page-accent) 76%, var(--text));
 }
 
 .span-2 {
@@ -756,6 +889,8 @@ code {
 }
 
 .card {
+  position: relative;
+  overflow: hidden;
   min-width: 0;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
@@ -765,12 +900,37 @@ code {
   padding: 1rem;
 }
 
+.page-grid > .card,
+.page-stack > .card,
+.task-workspace > .card,
+.task-detail-grid > .card,
+.collection-grid > .card,
+.notes-grid > .note-card {
+  box-shadow:
+    inset 0 3px 0 color-mix(in srgb, var(--page-accent) 78%, transparent),
+    var(--shadow);
+}
+
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
   margin-bottom: 0.85rem;
+}
+
+.card-header h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-header h2::before {
+  content: "";
+  width: 4px;
+  height: 1.25em;
+  border-radius: 999px;
+  background: var(--page-accent);
 }
 
 .card h2,

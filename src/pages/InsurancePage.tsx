@@ -8,7 +8,7 @@ const contractAreas = [
 ]
 
 export const InsurancePage = () => (
-  <div className="page-grid house-page">
+  <div className="page-grid house-page insurance-page">
     <section className="page-title span-3">
       <div>
         <h1>Versicherungen</h1>

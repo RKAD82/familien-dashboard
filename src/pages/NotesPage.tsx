@@ -76,8 +76,8 @@ export const NotesPage = () => {
   }
 
   return (
-    <div className="page-grid">
-      <section className="page-title span-2">
+    <div className="page-grid notes-page">
+      <section className="page-title span-3">
         <div>
           <h1>Notizen</h1>
           <p>Familiennotizen schreiben, lesen und nach Sichtbarkeit einordnen.</p>

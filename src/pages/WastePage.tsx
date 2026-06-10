@@ -16,8 +16,8 @@ export const WastePage = () => {
   const district = data.wasteDistricts[0]
 
   return (
-    <div className="page-grid">
-      <section className="page-title span-2">
+    <div className="page-grid waste-page">
+      <section className="page-title span-3">
         <div>
           <h1>Abfall</h1>
           <p>Brauweiler/Freimersdorf 2026, Seed aus manuell übernommenem Pulheimer Abfallkalender.</p>

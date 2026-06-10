@@ -66,7 +66,7 @@ export const LinksPage = () => {
   }
 
   return (
-    <div className="page-grid">
+    <div className="page-grid links-page">
       <section className="page-title span-3">
         <div>
           <h1>Links</h1>

@@ -84,7 +84,7 @@ export const ShoppingPage = () => {
 
   return (
     <div className="page-grid shopping-page">
-      <section className="page-title span-2">
+      <section className="page-title span-3">
         <div>
           <h1>Einkauf</h1>
           <p>Listen, Vorlagen und Artikel für den nächsten Einkauf pflegen.</p>
