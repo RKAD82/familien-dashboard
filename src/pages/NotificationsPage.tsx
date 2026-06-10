@@ -10,6 +10,8 @@ export const NotificationsPage = () => {
   const { user } = useAuth()
   const [pushMessage, setPushMessage] = useState<string | null>(null)
   const unread = data.notificationDeliveries.filter((delivery) => delivery.status !== 'read')
+  const read = data.notificationDeliveries.length - unread.length
+  const pushSupported = canUsePush()
 
   const enablePush = async () => {
     if (!user) {
@@ -24,15 +26,20 @@ export const NotificationsPage = () => {
   }
 
   return (
-    <div className="page-grid">
-      <section className="page-title span-2">
+    <div className="page-grid notifications-page">
+      <section className="page-title span-3">
         <div>
           <h1>Meldungen</h1>
           <p>Wichtige Aufgaben und Notizen erscheinen hier als Familienmeldung mit Lesestatus.</p>
         </div>
+        <div className="page-actions">
+          <Tag tone={unread.length ? 'warn' : 'good'}>{unread.length} ungelesen</Tag>
+          <Tag>{read} gelesen</Tag>
+          <Tag tone={pushSupported ? 'good' : 'warn'}>{pushSupported ? 'Push möglich' : 'Push lokal nicht aktiv'}</Tag>
+        </div>
       </section>
 
-      <Card title="In-App">
+      <Card title="In-App" className="notification-status-card">
         <div className="notification-summary">
           <Bell size={28} />
           <strong>{unread.length}</strong>
@@ -40,14 +47,14 @@ export const NotificationsPage = () => {
         </div>
       </Card>
 
-      <Card title="Web Push">
+      <Card title="Web Push" className="push-status-card span-2">
         <div className="push-box">
           <Smartphone size={24} />
           <p>
             iOS Web Push braucht iOS 16.4+, HTTPS und die zum Home-Bildschirm hinzugefügte PWA. Lokal ist echte
             iOS-Zustellung nicht prüfbar.
           </p>
-          <Button variant="secondary" disabled={!canUsePush()} onClick={() => void enablePush()}>
+          <Button variant="secondary" disabled={!pushSupported} onClick={() => void enablePush()}>
             Push aktivieren
           </Button>
           {pushMessage && <small>{pushMessage}</small>}

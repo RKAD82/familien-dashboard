@@ -17,6 +17,7 @@ export const NotesPage = () => {
   const [selectedNoteId, setSelectedNoteId] = useState(data.notes[0]?.id ?? '')
   const [editingNote, setEditingNote] = useState<NoteItem | null>(null)
   const selectedNote = data.notes.find((note) => note.id === selectedNoteId)
+  const importantNotes = data.notes.filter((note) => note.is_important).length
 
   const resetForm = () => {
     setEditingNote(null)
@@ -79,7 +80,11 @@ export const NotesPage = () => {
       <section className="page-title span-2">
         <div>
           <h1>Notizen</h1>
-          <p>Notiz anklicken und im großen Lesebereich öffnen.</p>
+          <p>Familiennotizen schreiben, lesen und nach Sichtbarkeit einordnen.</p>
+        </div>
+        <div className="page-actions">
+          <Tag>{data.notes.length} Notizen</Tag>
+          <Tag tone="warn">{importantNotes} wichtig</Tag>
         </div>
       </section>
 

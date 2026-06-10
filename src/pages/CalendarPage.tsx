@@ -32,6 +32,7 @@ export const CalendarPage = () => {
   const selectedEvents = sortByDate(yearEvents.filter((event) => toDateKey(event.starts_at) === selectedDate))
   const editingEvent = editingEventId ? data.events.find((event) => event.id === editingEventId) ?? null : null
   const assignableMembers = activeMemberships(data.memberships)
+  const importantEvents = yearEvents.filter((event) => event.is_important).length
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -105,15 +106,20 @@ export const CalendarPage = () => {
   }
 
   return (
-    <div className="page-grid">
+    <div className="page-grid calendar-page">
       <section className="page-title span-3">
         <div>
           <h1>Kalender {year}</h1>
-          <p>Tag anklicken, Termin eintragen und direkt im Jahreskalender sehen.</p>
+          <p>Jahresblick, Tagesdetails und Terminpflege in einer Ansicht.</p>
+        </div>
+        <div className="page-actions">
+          <Tag>{yearEvents.length} Termine</Tag>
+          <Tag tone="warn">{importantEvents} wichtig</Tag>
+          <Tag tone="info">{assignableMembers.length} Personen</Tag>
         </div>
       </section>
 
-      <Card title="Termin eintragen">
+      <Card title={editingEvent ? 'Termin bearbeiten' : 'Termin eintragen'} className="calendar-form-card">
         <form className="form-stack" onSubmit={onSubmit}>
           <Field label="Datum">
             <TextInput type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} />
@@ -204,7 +210,11 @@ export const CalendarPage = () => {
         </form>
       </Card>
 
-      <Card title={formatLongDate(`${selectedDate}T09:00:00`)} className="span-2">
+      <Card
+        title={formatLongDate(`${selectedDate}T09:00:00`)}
+        className="span-2 calendar-day-detail-card"
+        action={<Tag tone={selectedEvents.length ? 'info' : 'neutral'}>{selectedEvents.length || 'frei'}</Tag>}
+      >
         {selectedEvents.length ? (
           <div className="timeline-list">
             {selectedEvents.map((event) => (
@@ -237,7 +247,7 @@ export const CalendarPage = () => {
         )}
       </Card>
 
-      <div className="year-grid span-3">
+      <div className="year-grid calendar-year-grid span-3">
         {months.map((month) => {
           const monthEvents = yearEvents.filter((event) => {
             const date = new Date(event.starts_at)

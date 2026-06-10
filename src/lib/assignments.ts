@@ -42,24 +42,55 @@ export const assignmentLabel = (label: string, member: Pick<FamilyMembership, 'd
   member ? `${label}: ${member.display_name}` : null
 
 const personColorTokens = ['robin', 'nadja', 'melia', 'leonas'] as const
+type PersonColorToken = (typeof personColorTokens)[number]
 
-const personColorToken = (member: FamilyMembership | null | undefined) => {
+const isPersonColorToken = (value: unknown): value is PersonColorToken =>
+  typeof value === 'string' && personColorTokens.includes(value as PersonColorToken)
+
+const configuredPersonColorToken = (member: FamilyMembership | null | undefined) => {
   const configured = member?.notification_preferences?.avatarColor
-  if (typeof configured === 'string' && personColorTokens.includes(configured as (typeof personColorTokens)[number])) {
+  if (isPersonColorToken(configured)) {
     return configured
   }
+  return null
+}
 
+const fallbackPersonColorToken = (member: FamilyMembership | null | undefined) => {
   const seed = member?.display_name ?? member?.user_id ?? 'Familie'
   const index = [...seed].reduce((total, char) => total + char.charCodeAt(0), 0) % personColorTokens.length
   return personColorTokens[index]
 }
 
-export const memberAvatarColor = (member: FamilyMembership | null | undefined) => {
-  const token = personColorToken(member)
+export const memberColorTokenMap = (memberships: FamilyMembership[]) => {
+  const used = new Set<PersonColorToken>()
+  const entries = memberships.map((member, index) => {
+    const configured = configuredPersonColorToken(member)
+    let token = configured && !used.has(configured) ? configured : personColorTokens.find((candidate) => !used.has(candidate))
+
+    if (!token) {
+      token = personColorTokens[index % personColorTokens.length]
+    }
+    used.add(token)
+    return [member.id, token] as const
+  })
+
+  return new Map(entries)
+}
+
+const personColorToken = (member: FamilyMembership | null | undefined, memberships?: FamilyMembership[]) => {
+  if (!member) return fallbackPersonColorToken(member)
+  if (memberships?.length) {
+    return memberColorTokenMap(memberships).get(member.id) ?? configuredPersonColorToken(member) ?? fallbackPersonColorToken(member)
+  }
+  return configuredPersonColorToken(member) ?? fallbackPersonColorToken(member)
+}
+
+export const memberAvatarColor = (member: FamilyMembership | null | undefined, memberships?: FamilyMembership[]) => {
+  const token = personColorToken(member, memberships)
   return `var(--${token})`
 }
 
-export const memberAvatarSoftColor = (member: FamilyMembership | null | undefined) => {
-  const token = personColorToken(member)
+export const memberAvatarSoftColor = (member: FamilyMembership | null | undefined, memberships?: FamilyMembership[]) => {
+  const token = personColorToken(member, memberships)
   return `var(--${token}-soft)`
 }

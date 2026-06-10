@@ -3,11 +3,13 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { addDays, formatDay, formatLongDate, startOfWeek, toDateKey } from '../lib/date'
 import { memberAvatarColor, memberInitials } from '../lib/assignments'
+import { resolveViewedMembership } from '../lib/userView'
 import { isNavItemVisible, mobileNavItemIds, navigationItems } from '../navigation'
 import { useAuth } from '../hooks/useAuth'
 import type { FamilyActions } from '../routes/context'
 import type { DashboardData, FamilyMembership, NavItemId } from '../types'
 import { Button } from './ui'
+import { PwaUpdatePrompt } from './PwaUpdatePrompt'
 import { ThemeToggle } from './ThemeToggle'
 
 const weatherLabels: Record<number, string> = {
@@ -35,6 +37,7 @@ const weatherLabels: Record<number, string> = {
 const navigationGroups: { label: string; ids: NavItemId[] }[] = [
   { label: 'Zeit', ids: ['heute', 'woche', 'kalender'] },
   { label: 'Tun', ids: ['aufgaben', 'einkauf', 'links', 'notizen', 'abfall', 'rezepte'] },
+  { label: 'Haus', ids: ['inventar', 'versicherungen'] },
   { label: 'Familie', ids: ['aktivitaeten', 'meldungen', 'kontakte', 'notfall', 'system'] },
 ]
 
@@ -74,12 +77,20 @@ const usePulheimWeather = () => {
   return weather
 }
 
-const PhotoAvatar = ({ member, large = false }: { member?: FamilyMembership | null; large?: boolean }) => {
+const PhotoAvatar = ({
+  member,
+  memberships,
+  large = false,
+}: {
+  member?: FamilyMembership | null
+  memberships?: FamilyMembership[]
+  large?: boolean
+}) => {
   const name = member?.display_name ?? 'Familie'
   return (
     <span
       className={`photo-avatar ${large ? 'photo-avatar-large' : ''}`}
-      style={{ '--avatar-color': memberAvatarColor(member) } as CSSProperties}
+      style={{ '--avatar-color': memberAvatarColor(member, memberships) } as CSSProperties}
       title={name}
     >
       {memberInitials(member) || <UserRound size={large ? 22 : 14} />}
@@ -138,16 +149,18 @@ export const AppShell = ({
   const { signOut, user, membership } = useAuth()
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [simulatedMembershipId, setSimulatedMembershipId] = useState<string | null>(null)
   const weather = usePulheimWeather()
   const unread = data.notificationDeliveries.filter((delivery) => delivery.status !== 'read').length
   const activeMembers = data.memberships.filter((entry) => entry.active)
-  const currentMembership =
-    activeMembers.find((entry) => entry.user_id === user?.id) ?? membership ?? activeMembers[0] ?? null
+  const actualMembership = activeMembers.find((entry) => entry.user_id === user?.id) ?? membership ?? activeMembers[0] ?? null
+  const currentMembership = resolveViewedMembership(actualMembership, activeMembers, simulatedMembershipId)
+  const isSimulating = Boolean(simulatedMembershipId && actualMembership?.id !== currentMembership?.id)
   const visibleNavigation = navigationItems.filter((item) => isNavItemVisible(currentMembership, item))
   const mobileNavigation = mobileNavItemIds
     .map((id) => visibleNavigation.find((item) => item.id === id))
     .filter((item): item is (typeof visibleNavigation)[number] => Boolean(item))
-  const showWeekRail = location.pathname !== '/'
+  const showWeekRail = location.pathname === '/woche' || location.pathname === '/kalender'
 
   return (
     <div className="app-shell">
@@ -193,13 +206,13 @@ export const AppShell = ({
               <span>{weather?.label ?? 'Wetter lädt'} · Pulheim</span>
             </div>
           </div>
-          <div className="sidebar-user-row">
-            <PhotoAvatar member={currentMembership} />
+          <NavLink to="/profil" className="sidebar-user-row sidebar-user-link">
+            <PhotoAvatar member={currentMembership} memberships={activeMembers} />
             <div>
               <strong>{currentMembership?.display_name ?? 'Familie'}</strong>
-              <span>{currentMembership ? 'angemeldet' : 'Demoansicht'}</span>
+              <span>{isSimulating ? 'Simulation' : currentMembership ? 'angemeldet' : 'Demoansicht'}</span>
             </div>
-          </div>
+          </NavLink>
         </div>
 
         <Button variant="ghost" onClick={signOut}>
@@ -221,6 +234,7 @@ export const AppShell = ({
 
       <main className="main-content">
         {modeLabel && <div className="demo-banner">{modeLabel}</div>}
+        <PwaUpdatePrompt />
         <div className="app-topline">
           <div className="topline-date">{formatLongDate(new Date())}</div>
           <div className="topline-actions">
@@ -229,17 +243,36 @@ export const AppShell = ({
               <Bell size={19} />
               {unread > 0 && <em>{unread}</em>}
             </NavLink>
-            <PhotoAvatar member={currentMembership} />
             {currentMembership && (
+              <NavLink to="/profil" className="topline-profile" aria-label="Profil öffnen">
+                <PhotoAvatar member={currentMembership} memberships={activeMembers} />
               <div className="topline-user">
                 <strong>{currentMembership.display_name}</strong>
-                <span>{currentMembership.role === 'admin' ? 'Admin' : currentMembership.email ?? 'angemeldet'}</span>
+                  <span>{isSimulating ? 'Simulation' : currentMembership.role === 'admin' ? 'Admin' : currentMembership.email ?? 'angemeldet'}</span>
               </div>
+              </NavLink>
             )}
           </div>
         </div>
+        {isSimulating && (
+          <div className="simulation-banner">
+            <span>Simulation: {currentMembership?.display_name}</span>
+            <button type="button" onClick={() => setSimulatedMembershipId(null)}>
+              Beenden
+            </button>
+          </div>
+        )}
         {showWeekRail && <WeekRail />}
-        <Outlet context={{ data, actions }} />
+        <Outlet
+          context={{
+            data,
+            actions,
+            actualMembership,
+            currentMembership,
+            simulatedMembershipId,
+            setSimulatedMembershipId,
+          }}
+        />
       </main>
 
       <nav className="bottom-nav">

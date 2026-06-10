@@ -21,6 +21,7 @@ export const LinksPage = () => {
   const [favorite, setFavorite] = useState(true)
   const [editingLink, setEditingLink] = useState<FamilyLink | null>(null)
   const activeCollection = data.linkCollections.find((collection) => collection.id === collectionId) ?? data.linkCollections[0]
+  const favoriteLinks = data.links.filter((link) => link.favorite).length
 
   const resetForm = () => {
     setEditingLink(null)
@@ -70,6 +71,11 @@ export const LinksPage = () => {
         <div>
           <h1>Links</h1>
           <p>Zentrale Sammlung für die Seiten, die im Familienalltag wiederkehren.</p>
+        </div>
+        <div className="page-actions">
+          <Tag>{data.linkCollections.length} Sammlungen</Tag>
+          <Tag tone="info">{data.links.length} Links</Tag>
+          <Tag tone="warn">{favoriteLinks} Favoriten</Tag>
         </div>
       </section>
 

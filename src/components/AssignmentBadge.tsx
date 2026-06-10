@@ -21,7 +21,7 @@ export const AssignmentBadge = ({
   return (
     <span
       className={`assignment-badge ${compact ? 'assignment-badge-compact' : ''}`}
-      style={{ '--member-color': memberAvatarColor(member) } as CSSProperties}
+      style={{ '--member-color': memberAvatarColor(member, memberships) } as CSSProperties}
       title={assignmentLabel(label, member) ?? undefined}
     >
       <span className="assignment-initials">{memberInitials(member)}</span>

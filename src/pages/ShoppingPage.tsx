@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Check, Plus, Printer, RotateCcw, ShoppingBasket, Trash2 } from 'lucide-react'
 import { useFamilyRoute } from '../routes/context'
-import { Button, Card, EmptyState, Field, Select, TextInput } from '../components/ui'
+import { Button, Card, EmptyState, Field, Select, Tag, TextInput } from '../components/ui'
 import type { ShoppingItem } from '../types'
 
 const singleItemsLabel = 'Einzelne Artikel'
@@ -22,6 +22,7 @@ export const ShoppingPage = () => {
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const activeList = data.shoppingLists.find((list) => list.id === activeListId) ?? regularLists[0] ?? data.shoppingLists[0]
   const items = activeList ? data.shoppingItems.filter((item) => item.list_id === activeList.id) : []
+  const checkedItems = items.filter((item) => item.checked).length
   const groupedItems = items.reduce<Array<{ label: string; items: ShoppingItem[] }>>((groups, item) => {
     const label = item.source_label ?? singleItemsLabel
     const existing = groups.find((group) => group.label === label)
@@ -86,7 +87,12 @@ export const ShoppingPage = () => {
       <section className="page-title span-2">
         <div>
           <h1>Einkauf</h1>
-          <p>Listen, Vorlagen und Artikel pflegen.</p>
+          <p>Listen, Vorlagen und Artikel für den nächsten Einkauf pflegen.</p>
+        </div>
+        <div className="page-actions">
+          <Tag>{regularLists.length} Listen</Tag>
+          <Tag tone="info">{items.length} Artikel</Tag>
+          <Tag tone="good">{checkedItems} erledigt</Tag>
         </div>
       </section>
 

@@ -44,24 +44,45 @@ export const ActivitiesPage = () => {
   }
 
   return (
-    <div className="page-stack">
+    <div className="page-stack suggestions-page activities-page">
       <section className="page-title">
         <div>
           <h1>Aktivitäten</h1>
           <p>Vorschläge aus gespeicherten Quellen. Aktualisieren startet den Quellenlauf und archiviert abgelaufene Einträge.</p>
         </div>
-        <Button variant="secondary" disabled={refreshing} onClick={() => void runActivities()}>
-          <RefreshCw size={18} />
-          {refreshing ? 'Läuft...' : 'Aktualisieren'}
-        </Button>
+        <div className="page-actions">
+          <Tag>{activeActivities.length} aktiv</Tag>
+          <Tag tone="info">{archivedActivities.length} archiviert</Tag>
+          <Button variant="secondary" disabled={refreshing} onClick={() => void runActivities()}>
+            <RefreshCw size={18} />
+            {refreshing ? 'Läuft...' : 'Aktualisieren'}
+          </Button>
+        </div>
       </section>
 
-      <Card title="Letzter Lauf">
-        <div className="compact-list">
-          <article>
+      <Card title="Quellenlauf" className="agent-status-card">
+        <div className="agent-status-layout">
+          <div className="agent-status-icon">
+            <Ticket size={22} />
+          </div>
+          <div>
             <strong>{lastRun?.status === 'ok' ? 'Aktualisierung erfolgreich' : lastRun?.status === 'error' ? 'Fehler im Lauf' : 'Aktivitäten-Agent'}</strong>
             <span>{formatRunLabel(lastRun)}</span>
-          </article>
+          </div>
+          <div className="agent-status-metrics">
+            <article>
+              <strong>{activeActivities.length}</strong>
+              <span>aktive Vorschläge</span>
+            </article>
+            <article>
+              <strong>{archivedActivities.length}</strong>
+              <span>Archiv</span>
+            </article>
+            <article>
+              <strong>{activityRuns.length}</strong>
+              <span>Läufe</span>
+            </article>
+          </div>
         </div>
       </Card>
 

@@ -17,6 +17,7 @@ export const ContactsPage = () => {
   const [error, setError] = useState<string | null>(null)
 
   const contacts = [...data.contacts].sort((a, b) => Number(b.favorite) - Number(a.favorite) || a.name.localeCompare(b.name))
+  const favoriteContacts = contacts.filter((contact) => contact.favorite).length
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -77,9 +78,13 @@ export const ContactsPage = () => {
           <h1>Kontakte</h1>
           <p>Telefon, Handy, Adresse und Bemerkungen für wichtige Familienkontakte.</p>
         </div>
+        <div className="page-actions">
+          <Tag>{contacts.length} Kontakte</Tag>
+          <Tag tone="warn">{favoriteContacts} wichtig</Tag>
+        </div>
       </section>
 
-      <Card title={editingId ? 'Kontakt bearbeiten' : 'Kontakt anlegen'}>
+      <Card title={editingId ? 'Kontakt bearbeiten' : 'Kontakt anlegen'} className="directory-form-card">
         <form className="form-stack" onSubmit={onSubmit}>
           <Field label="Name">
             <TextInput value={name} onChange={(event) => setName(event.target.value)} />
@@ -121,7 +126,7 @@ export const ContactsPage = () => {
         </form>
       </Card>
 
-      <Card title="Familienkontakte" className="span-2">
+      <Card title="Familienkontakte" className="span-2 directory-list-card">
         {contacts.length ? (
           <div className="contact-grid">
             {contacts.map((contact) => (

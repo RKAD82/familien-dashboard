@@ -34,6 +34,7 @@ export const EmergencyPage = () => {
   const [error, setError] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const emergencyItems = [...data.emergencyItems].sort((a, b) => a.priority - b.priority || a.title.localeCompare(b.title))
+  const urgentItems = emergencyItems.filter((item) => item.priority <= 2).length
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -97,9 +98,13 @@ export const EmergencyPage = () => {
           <h1>Notfall</h1>
           <p>Notfallkontakte, wichtige Nummern, Adressen und Hinweise an einem Ort.</p>
         </div>
+        <div className="page-actions">
+          <Tag>{emergencyItems.length} Einträge</Tag>
+          <Tag tone={urgentItems ? 'warn' : 'info'}>{urgentItems} höchste Priorität</Tag>
+        </div>
       </section>
 
-      <Card title={editingId ? 'Notfall-Eintrag bearbeiten' : 'Notfall-Eintrag anlegen'}>
+      <Card title={editingId ? 'Notfall-Eintrag bearbeiten' : 'Notfall-Eintrag anlegen'} className="emergency-form-card">
         <form className="form-stack" onSubmit={onSubmit}>
           <Field label="Art">
             <Select value={type} onChange={(event) => setType(event.target.value as EmergencyItemType)}>

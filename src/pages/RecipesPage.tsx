@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react'
-import { Check, ChefHat, RefreshCw, ShoppingCart } from 'lucide-react'
+import { Check, ChefHat, RefreshCw, ShoppingCart, Sprout } from 'lucide-react'
 import { generateRecipeSuggestions, vegetarianCoverageOk } from '../lib/recipes'
 import { useFamilyRoute } from '../routes/context'
 import { Button, Card, EmptyState, Tag } from '../components/ui'
@@ -41,13 +41,15 @@ export const RecipesPage = () => {
   }
 
   return (
-    <div className="page-stack">
+    <div className="page-stack suggestions-page recipes-page">
       <section className="page-title">
         <div>
           <h1>Rezepte</h1>
           <p>Wöchentliche Vorschläge aus gespeicherten Rezepten. Alte Vorschläge bleiben im Archivstatus erhalten.</p>
         </div>
         <div className="page-actions">
+          <Tag>{suggestions.length} Vorschläge</Tag>
+          <Tag tone="info">{activeRecipes.length} aktiv</Tag>
           <Tag tone={coverageOk ? 'good' : 'warn'}>{coverageOk ? 'mind. 2 vegetarisch' : 'vegetarische Quote prüfen'}</Tag>
           <Button variant="secondary" disabled={refreshing} onClick={() => void runRecipes()}>
             <RefreshCw size={18} />
@@ -56,12 +58,29 @@ export const RecipesPage = () => {
         </div>
       </section>
 
-      <Card title="Letzter Lauf">
-        <div className="compact-list">
-          <article>
+      <Card title="Rezeptlauf" className="agent-status-card">
+        <div className="agent-status-layout">
+          <div className="agent-status-icon">
+            <Sprout size={22} />
+          </div>
+          <div>
             <strong>{lastRun?.status === 'ok' ? 'Rezeptvorschläge aktualisiert' : lastRun?.status === 'error' ? 'Fehler im Lauf' : 'Rezept-Agent'}</strong>
             <span>{formatRunLabel(lastRun)}</span>
-          </article>
+          </div>
+          <div className="agent-status-metrics">
+            <article>
+              <strong>{suggestions.length}</strong>
+              <span>aktuelle Vorschläge</span>
+            </article>
+            <article>
+              <strong>{archivedRecipes.length}</strong>
+              <span>Archiv</span>
+            </article>
+            <article>
+              <strong>{recipeRuns.length}</strong>
+              <span>Läufe</span>
+            </article>
+          </div>
         </div>
       </Card>
 

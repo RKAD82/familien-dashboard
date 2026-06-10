@@ -112,7 +112,11 @@ export const TasksPage = () => {
       <section className="page-title">
         <div>
           <h1>Aufgaben</h1>
-          <p>Aufgaben anklicken zum Lesen, separat abhaken, wieder öffnen oder löschen.</p>
+          <p>Offene Aufgaben, Details und erledigte Punkte in einer Arbeitsansicht.</p>
+        </div>
+        <div className="page-actions">
+          <Tag tone="warn">{tasks.length} offen</Tag>
+          <Tag tone="good">{done.length} erledigt</Tag>
         </div>
       </section>
 

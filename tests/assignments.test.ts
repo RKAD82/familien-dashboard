@@ -95,6 +95,22 @@ describe('Zuständigkeitsmodell', () => {
     expect(memberAvatarSoftColor(members[0])).toBe('var(--robin-soft)')
     expect(memberAvatarColor({ ...members[1], notification_preferences: { avatarColor: '#ffffff' } })).toMatch(/^var\(--/)
   })
+
+  it('vergibt in einer Familie eindeutige Fallback-Farben, solange genug Tokens vorhanden sind', () => {
+    const familyMembers: FamilyMembership[] = [
+      { ...members[0], notification_preferences: { avatarColor: 'robin' } },
+      { ...members[1], id: 'member-nadja', user_id: 'user-nadja', display_name: 'Nadja', notification_preferences: undefined },
+      { ...members[1], id: 'member-melia', user_id: 'user-melia', display_name: 'Melia', notification_preferences: undefined },
+      { ...members[1], id: 'member-leonas', user_id: 'user-leonas', display_name: 'Leonas', notification_preferences: undefined },
+    ]
+
+    expect(familyMembers.map((member) => memberAvatarColor(member, familyMembers))).toEqual([
+      'var(--robin)',
+      'var(--nadja)',
+      'var(--melia)',
+      'var(--leonas)',
+    ])
+  })
 })
 
 describe('Zuständigkeits-Migration', () => {

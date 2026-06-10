@@ -1,34 +1,5 @@
 import { useEffect, useState } from 'react'
-
-type ThemePreference = 'light' | 'dark' | 'system'
-
-const storageKey = 'familien-dashboard-theme'
-const preferences: { label: string; value: ThemePreference }[] = [
-  { label: 'Hell', value: 'light' },
-  { label: 'Dunkel', value: 'dark' },
-  { label: 'System', value: 'system' },
-]
-
-const storedTheme = () => {
-  if (typeof window === 'undefined') return 'light'
-  try {
-    const value = window.localStorage.getItem(storageKey)
-    return value === 'light' || value === 'dark' || value === 'system' ? value : 'light'
-  } catch {
-    return 'light'
-  }
-}
-
-const resolveTheme = (preference: ThemePreference) => {
-  if (preference !== 'system') return preference
-  if (typeof window === 'undefined') return 'light'
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-}
-
-const applyTheme = (preference: ThemePreference) => {
-  if (typeof document === 'undefined') return
-  document.documentElement.dataset.theme = resolveTheme(preference)
-}
+import { applyTheme, storedTheme, themePreferences, themeStorageKey, type ThemePreference } from '../lib/theme'
 
 export const ThemeToggle = ({ compact = false }: { compact?: boolean }) => {
   const [preference, setPreference] = useState<ThemePreference>(storedTheme)
@@ -36,7 +7,7 @@ export const ThemeToggle = ({ compact = false }: { compact?: boolean }) => {
   useEffect(() => {
     applyTheme(preference)
     try {
-      window.localStorage.setItem(storageKey, preference)
+      window.localStorage.setItem(themeStorageKey, preference)
     } catch {
       // Theme still works for the current session when storage is unavailable.
     }
@@ -50,7 +21,7 @@ export const ThemeToggle = ({ compact = false }: { compact?: boolean }) => {
 
   return (
     <div className={`theme-toggle ${compact ? 'theme-toggle-compact' : ''}`} role="group" aria-label="Darstellung umschalten">
-      {preferences.map((entry) => (
+      {themePreferences.map((entry) => (
         <button
           key={entry.value}
           type="button"

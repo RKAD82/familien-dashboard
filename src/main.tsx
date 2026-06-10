@@ -4,10 +4,17 @@ import { HashRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
 import { App } from './App'
 import { AuthProvider } from './hooks/useAuth'
+import { markPwaUpdateAvailable } from './lib/pwaUpdate'
 import './styles.css'
 
-registerSW({
+const updateSW = registerSW({
   immediate: true,
+  onNeedRefresh() {
+    markPwaUpdateAvailable()
+  },
+  onNeedReload() {
+    markPwaUpdateAvailable()
+  },
   onRegisteredSW(_swUrl, registration) {
     if (registration) {
       setInterval(() => {
@@ -16,6 +23,10 @@ registerSW({
     }
   },
 })
+
+if (typeof window !== 'undefined') {
+  window.familienDashboardUpdateSW = updateSW
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

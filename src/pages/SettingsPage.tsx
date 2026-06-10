@@ -107,7 +107,7 @@ const MemberAdminCard = ({
         <Field label="Name">
           <TextInput disabled={!canManage || saving} value={displayName} onChange={(event) => setDisplayName(event.target.value)} />
         </Field>
-        <Field label="Loginname">
+        <Field label="Loginname (Kurzname)">
           <TextInput disabled={!canManage || saving} value={loginName} onChange={(event) => setLoginName(event.target.value)} />
         </Field>
       </div>
@@ -280,9 +280,14 @@ export const SettingsPage = () => {
           <h1>System</h1>
           <p>Status, Zugang, Nutzerverwaltung, Quellenqualität und Veröffentlichung.</p>
         </div>
+        <div className="page-actions">
+          <Tag tone={configured ? 'good' : 'warn'}>{configured ? 'Online' : 'Demo'}</Tag>
+          <Tag tone={canManageMembers ? 'good' : 'neutral'}>{canManageMembers ? 'Admin' : 'eingeschränkt'}</Tag>
+          <Tag>{activeMembers.length} aktive Nutzer</Tag>
+        </div>
       </section>
 
-      <Card title="Angemeldet als">
+      <Card title="Angemeldet als" className="settings-user-card">
         <div className="setup-card">
           <UserCheck size={24} />
           <strong>{currentMembership?.display_name ?? user?.email ?? 'Nicht angemeldet'}</strong>
@@ -291,16 +296,16 @@ export const SettingsPage = () => {
         </div>
       </Card>
 
-      <Card title="Darstellung">
+      <Card title="Darstellung" className="settings-theme-card">
         <div className="setup-card">
           <Palette size={24} />
-          <strong>Hell, dunkel oder System</strong>
+          <strong>Hell, Dunkel oder Auto</strong>
           <span>Die Auswahl wird auf diesem Gerät gespeichert.</span>
           <ThemeToggle />
         </div>
       </Card>
 
-      <Card title="Speicher">
+      <Card title="Speicher" className="settings-storage-card">
         <div className="setup-card">
           <Database size={24} />
           <strong>{data.family.name}</strong>
@@ -309,7 +314,7 @@ export const SettingsPage = () => {
         </div>
       </Card>
 
-      <Card title="Veröffentlichung">
+      <Card title="Veröffentlichung" className="settings-release-card">
         <div className="setup-card">
           <GitBranch size={24} />
           <strong>GitHub Pages</strong>
@@ -318,7 +323,7 @@ export const SettingsPage = () => {
         </div>
       </Card>
 
-      <Card title="Nutzer direkt anlegen">
+      <Card title="Nutzer direkt anlegen" className="settings-create-user-card">
         <form className="form-stack" onSubmit={onCreateUserSubmit}>
           <div className="form-intro">
             <Send size={22} />
@@ -327,7 +332,7 @@ export const SettingsPage = () => {
           <Field label="Name">
             <TextInput disabled={!canManageMembers} value={newName} onChange={(event) => setNewName(event.target.value)} />
           </Field>
-          <Field label="Loginname">
+          <Field label="Loginname (Kurzname)">
             <TextInput disabled={!canManageMembers} placeholder="max" value={newLoginName} onChange={(event) => setNewLoginName(event.target.value)} />
           </Field>
           <Field label="Passwort">
@@ -353,7 +358,7 @@ export const SettingsPage = () => {
         </form>
       </Card>
 
-      <Card title="Passwort ändern" className="span-2">
+      <Card title="Eigenes Passwort ändern" className="span-2 settings-password-card">
         <form className="form-stack" onSubmit={onPasswordSubmit}>
           <div className="form-intro">
             <KeyRound size={22} />
@@ -375,11 +380,11 @@ export const SettingsPage = () => {
         </form>
       </Card>
 
-      <Card title="Nutzerverwaltung" className="span-3">
+      <Card title="Nutzerverwaltung" className="span-3 settings-members-card">
         <div className="visibility-admin">
           <div className="form-intro">
             <UserPlus size={22} />
-            <span>Admins verwalten Name, Login, Rolle, Status, Menüpunkte und Passwörter.</span>
+            <span>Admins verwalten Name, Loginname, Rolle, Status, Menüpunkte und Passwörter. Der Loginname ist der kurze Anmeldename, nicht die E-Mail-Adresse.</span>
           </div>
           <div className="member-admin-grid">
             {data.memberships.map((member) => (
@@ -397,7 +402,7 @@ export const SettingsPage = () => {
         </div>
       </Card>
 
-      <Card title="Datenqualität" className="span-3">
+      <Card title="Datenqualität" className="span-3 settings-quality-card">
         <div className="quality-grid">
           <article>
             <ShieldCheck size={22} />

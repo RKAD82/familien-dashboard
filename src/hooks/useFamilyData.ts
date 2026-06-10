@@ -1,4 +1,5 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useRef } from 'react'
 import { publicBasePath } from '../config'
 import { assignmentPayloadForEvent, assignmentPayloadForTask } from '../lib/assignments'
 import {
@@ -64,8 +65,13 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
   const [data, setData] = useState<DashboardData | null>(family ? emptyData(family) : null)
   const [loading, setLoading] = useState(Boolean(family))
   const [error, setError] = useState<string | null>(null)
+  const hasLoadedRef = useRef(false)
 
   const familyId = family?.id ?? null
+
+  useEffect(() => {
+    hasLoadedRef.current = false
+  }, [familyId])
 
   const loadData = useCallback(async () => {
     if (!familyId || !family || !supabase) {
@@ -74,7 +80,9 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       return
     }
 
-    setLoading(true)
+    if (!hasLoadedRef.current) {
+      setLoading(true)
+    }
     setError(null)
 
     const [
@@ -210,6 +218,7 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       activityAgentRuns: (activityRuns.data as ActivityAgentRun[] | null) ?? [],
       notificationDeliveries: (deliveries.data as NotificationDelivery[] | null) ?? [],
     })
+    hasLoadedRef.current = true
     setLoading(false)
   }, [family, familyId, userId])
 

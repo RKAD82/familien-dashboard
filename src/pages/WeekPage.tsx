@@ -18,6 +18,10 @@ export const WeekPage = () => {
   const weekTasks = data.tasks.filter((task) => task.due_at && isInCurrentWeek(task.due_at) && task.status !== 'done')
   const selectedEvents = weekEvents.filter((event) => toDateKey(event.starts_at) === activeKey)
   const selectedTasks = weekTasks.filter((task) => task.due_at && toDateKey(task.due_at) === activeKey)
+  const busyDays = days.filter((day) => {
+    const key = toDateKey(day)
+    return weekEvents.some((event) => toDateKey(event.starts_at) === key) || weekTasks.some((task) => task.due_at && toDateKey(task.due_at) === key)
+  }).length
   const selectDay = (key: string) => {
     setSelectedKey(key)
     setSearchParams({ tag: key })
@@ -28,11 +32,16 @@ export const WeekPage = () => {
       <section className="page-title span-3">
         <div>
           <h1>Woche</h1>
-          <p>Tage untereinander, antippen und Details lesen.</p>
+          <p>Eine ruhige Wochenübersicht mit Tagesauswahl, Terminen und offenen Aufgaben.</p>
+        </div>
+        <div className="page-actions">
+          <Tag>{busyDays} aktive Tage</Tag>
+          <Tag tone="info">{weekEvents.length} Termine</Tag>
+          <Tag tone="warn">{weekTasks.length} Aufgaben</Tag>
         </div>
       </section>
 
-      <div className="week-list">
+      <div className="week-list week-selector">
         {days.map((day) => {
           const key = toDateKey(day)
           const dayEvents = weekEvents.filter((event) => toDateKey(event.starts_at) === key)

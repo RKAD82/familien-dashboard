@@ -5,6 +5,7 @@ import type {
   EventItem,
   FamilyContact,
   FamilyLink,
+  FamilyMembership,
   NoteItem,
   NotificationDelivery,
   NavItemId,
@@ -128,6 +129,10 @@ export interface FamilyActions {
 export interface FamilyRouteContext {
   data: DashboardData
   actions: FamilyActions
+  actualMembership?: FamilyMembership | null
+  currentMembership?: FamilyMembership | null
+  simulatedMembershipId?: string | null
+  setSimulatedMembershipId?: (membershipId: string | null) => void
 }
 
 export const useFamilyRoute = () => useOutletContext<FamilyRouteContext>()

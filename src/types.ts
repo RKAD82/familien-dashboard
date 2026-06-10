@@ -10,6 +10,8 @@ export type NavItemId =
   | 'notizen'
   | 'abfall'
   | 'rezepte'
+  | 'inventar'
+  | 'versicherungen'
   | 'aktivitaeten'
   | 'meldungen'
   | 'kontakte'

@@ -1,6 +1,5 @@
 import { Check, CheckCircle2, Clock3, ShoppingCart } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
 import { expandRecurringEvents, formatDay, formatTime, isToday, openTasks, sortByDate, tasksDueToday } from '../lib/date'
 import { findMembership, memberAvatarColor, memberAvatarSoftColor, memberInitials } from '../lib/assignments'
 import { getUpcomingWasteEvents } from '../lib/waste'
@@ -64,8 +63,7 @@ const doneText = (tasks: TaskItem[], members: FamilyMembership[]) => {
 }
 
 export const TodayPage = () => {
-  const { data, actions } = useFamilyRoute()
-  const { membership, user } = useAuth()
+  const { data, actions, currentMembership } = useFamilyRoute()
   const now = new Date()
   const todayStart = new Date(now)
   todayStart.setHours(0, 0, 0, 0)
@@ -73,7 +71,6 @@ export const TodayPage = () => {
   todayEnd.setHours(23, 59, 59, 999)
 
   const activeMembers = data.memberships.filter((entry) => entry.active)
-  const currentMembership = activeMembers.find((entry) => entry.user_id === user?.id) ?? membership ?? activeMembers[0] ?? null
   const todayEvents = sortByDate(expandRecurringEvents(data.events, todayStart, todayEnd)).slice(0, 8)
   const currentEvent = runningEvent(todayEvents, now)
   const upcomingEvent = nextEventAfter(todayEvents.filter((event) => event.id !== currentEvent?.id), now)
@@ -96,7 +93,7 @@ export const TodayPage = () => {
     : 0
 
   const heroStyle = {
-    '--hero-person-color': memberAvatarColor(currentMembership),
+    '--hero-person-color': memberAvatarColor(currentMembership, activeMembers),
   } as CSSProperties
   const personName = currentMembership?.display_name.split(' ')[0] ?? 'Familie'
   const wasteHint = nextWaste[0]?.title
@@ -191,8 +188,8 @@ export const TodayPage = () => {
               className="today-person-pill"
               style={
                 {
-                  '--member-color': memberAvatarColor(member),
-                  '--member-soft-color': memberAvatarSoftColor(member),
+                  '--member-color': memberAvatarColor(member, activeMembers),
+                  '--member-soft-color': memberAvatarSoftColor(member, activeMembers),
                 } as CSSProperties
               }
             >

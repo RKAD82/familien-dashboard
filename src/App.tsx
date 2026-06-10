@@ -5,15 +5,18 @@ import { VisibleRoute } from './components/VisibleRoute'
 import { Card } from './components/ui'
 import { hasSupabaseConfig } from './config'
 import { DemoApp } from './demo/DemoApp'
-import { useAuth } from './hooks/useAuth'
+import { AuthProvider, useAuth } from './hooks/useAuth'
 import { useFamilyData } from './hooks/useFamilyData'
 import { ActivitiesPage } from './pages/ActivitiesPage'
 import { CalendarPage } from './pages/CalendarPage'
 import { ContactsPage } from './pages/ContactsPage'
 import { EmergencyPage } from './pages/EmergencyPage'
+import { InsurancePage } from './pages/InsurancePage'
+import { InventoryPage } from './pages/InventoryPage'
 import { LinksPage } from './pages/LinksPage'
 import { NotesPage } from './pages/NotesPage'
 import { NotificationsPage } from './pages/NotificationsPage'
+import { ProfilePage } from './pages/ProfilePage'
 import { RecipesPage } from './pages/RecipesPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { ShoppingPage } from './pages/ShoppingPage'
@@ -63,10 +66,13 @@ const AuthenticatedApp = () => {
         <Route path="notizen" element={<VisibleRoute navId="notizen"><NotesPage /></VisibleRoute>} />
         <Route path="abfall" element={<VisibleRoute navId="abfall"><WastePage /></VisibleRoute>} />
         <Route path="rezepte" element={<VisibleRoute navId="rezepte"><RecipesPage /></VisibleRoute>} />
+        <Route path="inventar" element={<VisibleRoute navId="inventar"><InventoryPage /></VisibleRoute>} />
+        <Route path="versicherungen" element={<VisibleRoute navId="versicherungen"><InsurancePage /></VisibleRoute>} />
         <Route path="aktivitaeten" element={<VisibleRoute navId="aktivitaeten"><ActivitiesPage /></VisibleRoute>} />
         <Route path="meldungen" element={<VisibleRoute navId="meldungen"><NotificationsPage /></VisibleRoute>} />
         <Route path="kontakte" element={<VisibleRoute navId="kontakte"><ContactsPage /></VisibleRoute>} />
         <Route path="notfall" element={<VisibleRoute navId="notfall"><EmergencyPage /></VisibleRoute>} />
+        <Route path="profil" element={<ProfilePage />} />
         <Route path="einstellungen" element={<VisibleRoute navId="system"><SettingsPage /></VisibleRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
@@ -76,7 +82,11 @@ const AuthenticatedApp = () => {
 
 export const App = () => {
   if (!hasSupabaseConfig) {
-    return <DemoApp />
+    return (
+      <AuthProvider>
+        <DemoApp />
+      </AuthProvider>
+    )
   }
 
   return (
