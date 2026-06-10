@@ -808,30 +808,37 @@ code {
 .page-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-4);
+  gap: clamp(0.9rem, 1.6vw, 1.25rem);
   align-items: start;
 }
 
 .page-stack {
   display: grid;
-  gap: var(--space-4);
+  gap: clamp(0.9rem, 1.6vw, 1.25rem);
 }
 
 .page-title {
   position: relative;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--page-accent) 22%, var(--border));
+  grid-column: 1 / -1;
+  border: 1px solid color-mix(in srgb, var(--page-accent) 28%, var(--border));
   border-radius: var(--r-lg);
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--page-accent-soft) 72%, var(--panel)) 0%, var(--panel) 58%),
+    linear-gradient(135deg, color-mix(in srgb, var(--page-accent-soft) 86%, var(--panel)) 0%, var(--panel) 52%),
+    linear-gradient(90deg, color-mix(in srgb, var(--page-accent) 10%, transparent), transparent 62%),
     var(--panel);
-  box-shadow: var(--shadow);
-  display: flex;
-  align-items: flex-start;
+  box-shadow: var(--shadow-lg);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
   justify-content: space-between;
-  gap: var(--space-4);
-  min-height: 126px;
-  padding: clamp(1rem, 2vw, 1.35rem);
+  gap: clamp(1rem, 2.2vw, 2rem);
+  min-height: 168px;
+  padding: clamp(1.15rem, 2.4vw, 1.75rem);
+}
+
+.page-title:has(.page-actions) {
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 34%);
 }
 
 .page-title::before {
@@ -842,42 +849,75 @@ code {
   background: var(--page-accent);
 }
 
+.page-title::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: min(42%, 420px);
+  background:
+    linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--panel) 64%, transparent) 70%),
+    repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--page-accent) 16%, transparent) 0 1px,
+      transparent 1px 18px
+    );
+  opacity: 0.72;
+  pointer-events: none;
+}
+
 .page-title > div {
   position: relative;
   z-index: 1;
+  display: grid;
+  align-content: center;
+  gap: 0.55rem;
   min-width: 0;
 }
 
 .page-title h1 {
   color: var(--text);
-  font-size: clamp(2rem, 3vw, 2.55rem);
-  font-weight: 700;
-  line-height: 1.12;
+  font-size: clamp(2.25rem, 4.2vw, 3.35rem);
+  font-weight: 560;
+  line-height: 0.98;
 }
 
 .page-title p {
-  max-width: 760px;
-  margin-top: 0.35rem;
-  color: var(--muted);
-  font-size: 0.92rem;
-  line-height: 1.45;
+  max-width: 780px;
+  color: var(--text-soft);
+  font-size: clamp(0.95rem, 1.2vw, 1.06rem);
+  line-height: 1.55;
 }
 
 .page-actions {
   position: relative;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  max-width: 430px;
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: center;
+  gap: 0.55rem;
+  min-width: 0;
 }
 
 .page-actions .tag {
+  min-height: 44px;
   border-color: color-mix(in srgb, var(--page-accent) 26%, var(--border));
-  background: color-mix(in srgb, var(--page-accent-soft) 70%, var(--panel));
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--page-accent-soft) 78%, var(--panel));
   color: color-mix(in srgb, var(--page-accent) 76%, var(--text));
+  justify-content: flex-start;
+  padding: 0.58rem 0.7rem;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel) 70%, transparent);
+  white-space: normal;
+}
+
+.page-actions .button {
+  width: 100%;
+}
+
+.page-actions .button:only-child,
+.page-actions .tag:only-child {
+  grid-column: 1 / -1;
 }
 
 .span-2 {
@@ -889,6 +929,7 @@ code {
 }
 
 .card {
+  --card-pad: 1rem;
   position: relative;
   overflow: hidden;
   min-width: 0;
@@ -897,7 +938,7 @@ code {
   background: var(--panel);
   box-shadow: var(--shadow);
   color: var(--text);
-  padding: 1rem;
+  padding: var(--card-pad);
 }
 
 .page-grid > .card,
@@ -905,9 +946,20 @@ code {
 .task-workspace > .card,
 .task-detail-grid > .card,
 .collection-grid > .card,
-.notes-grid > .note-card {
+.notes-grid > .note-card,
+.contact-card,
+.emergency-card,
+.member-admin-card,
+.visibility-grid article,
+.security-grid article,
+.quality-grid article,
+.house-overview-grid article,
+.waste-strip article {
+  border-color: color-mix(in srgb, var(--page-accent) 18%, var(--border));
+  background:
+    linear-gradient(180deg, var(--panel) 0%, color-mix(in srgb, var(--page-accent-soft) 30%, var(--panel)) 100%);
   box-shadow:
-    inset 0 3px 0 color-mix(in srgb, var(--page-accent) 78%, transparent),
+    inset 0 4px 0 color-mix(in srgb, var(--page-accent) 78%, transparent),
     var(--shadow);
 }
 
@@ -916,7 +968,11 @@ code {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: 0.85rem;
+  margin: calc(var(--card-pad) * -1) calc(var(--card-pad) * -1) 0.95rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--page-accent) 14%, var(--border-soft));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--page-accent-soft) 58%, var(--panel)) 0%, transparent 76%);
+  padding: 0.86rem var(--card-pad);
 }
 
 .card-header h2 {
@@ -1070,13 +1126,40 @@ code {
 .compact-list article,
 .notification-list article,
 .link-list a,
+.waste-list article,
+.month-list article,
 .shopping-items button,
 .day-items article {
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--page-accent) 16%, var(--border));
   border-radius: var(--r-sm);
-  background: var(--panel);
+  background:
+    linear-gradient(180deg, var(--panel) 0%, color-mix(in srgb, var(--page-accent-soft) 24%, var(--panel)) 100%);
   color: var(--text);
   padding: 0.82rem;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--panel) 92%, transparent);
+  transition:
+    border-color var(--motion-fast) var(--ease),
+    box-shadow var(--motion-fast) var(--ease),
+    transform var(--motion-fast) var(--ease),
+    background var(--motion-fast) var(--ease);
+}
+
+.timeline-item:hover,
+.task-card:hover,
+.compact-list a:hover,
+.link-list a:hover,
+.notification-list article:hover,
+.shopping-items button:hover,
+.day-items article:hover,
+.contact-card:hover,
+.emergency-card:hover,
+.recipe-card:hover,
+.activity-card:hover,
+.note-card:hover,
+.house-overview-grid article:hover {
+  border-color: color-mix(in srgb, var(--page-accent) 32%, var(--border));
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
 }
 
 .compact-list article,
@@ -1101,8 +1184,16 @@ code {
 }
 
 .compact-list article svg,
-.compact-list a svg {
-  color: var(--robin);
+.compact-list a svg,
+.form-intro svg,
+.house-overview-grid svg,
+.contact-facts svg,
+.emergency-card a svg,
+.note-card-button svg,
+.notification-summary svg,
+.push-box svg,
+.activity-detail svg {
+  color: var(--page-accent);
   flex: 0 0 auto;
 }
 
@@ -1197,10 +1288,6 @@ code {
   grid-template-columns: 28px minmax(0, 1fr);
   align-items: start;
   gap: 0.55rem;
-}
-
-.form-intro svg {
-  color: var(--robin);
 }
 
 .form-error,
@@ -1331,39 +1418,39 @@ input[type='checkbox'] {
 }
 
 .task-card:hover {
-  border-color: color-mix(in srgb, var(--robin) 22%, var(--border));
+  border-color: color-mix(in srgb, var(--page-accent) 28%, var(--border));
 }
 
 .task-card.selected,
 .note-card-button.selected {
-  background: var(--robin-soft);
-  outline: 2px solid color-mix(in srgb, var(--robin) 24%, transparent);
+  background: var(--page-accent-soft);
+  outline: 2px solid color-mix(in srgb, var(--page-accent) 24%, transparent);
 }
 
 .task-card button {
   border: 0;
   background: transparent;
-  color: var(--robin);
+  color: var(--page-accent);
   cursor: pointer;
 }
 
 .task-card .task-done-button {
   min-height: 36px;
-  border: 1px solid color-mix(in srgb, var(--robin) 22%, var(--border));
+  border: 1px solid color-mix(in srgb, var(--page-accent) 22%, var(--border));
   border-radius: 999px;
   background: var(--panel);
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   padding: 0.38rem 0.66rem;
-  color: var(--robin);
+  color: var(--page-accent);
   font-size: 0.78rem;
   font-weight: 600;
   white-space: nowrap;
 }
 
 .task-card .task-done-button:hover {
-  background: var(--robin-soft);
+  background: var(--page-accent-soft);
 }
 
 .task-open-button {
@@ -1416,13 +1503,13 @@ input[type='checkbox'] {
 }
 
 .week-day-card:hover {
-  border-color: var(--border);
-  background: var(--panel);
+  border-color: color-mix(in srgb, var(--page-accent) 26%, var(--border));
+  background: color-mix(in srgb, var(--page-accent-soft) 26%, var(--panel));
 }
 
 .week-day-card.selected {
-  border-color: color-mix(in srgb, var(--robin) 42%, var(--border));
-  background: var(--robin-soft);
+  border-color: color-mix(in srgb, var(--page-accent) 42%, var(--border));
+  background: var(--page-accent-soft);
 }
 
 .week-day-card span,
@@ -1479,9 +1566,7 @@ input[type='checkbox'] {
 
 .house-overview-grid article {
   min-height: 132px;
-  border: 1px solid var(--border);
   border-radius: var(--r-sm);
-  background: var(--panel-2);
   display: grid;
   align-content: start;
   gap: 0.42rem;
@@ -1489,7 +1574,7 @@ input[type='checkbox'] {
 }
 
 .house-overview-grid svg {
-  color: var(--robin);
+  color: var(--page-accent);
 }
 
 .house-overview-grid strong {
@@ -1681,14 +1766,14 @@ input[type='checkbox'] {
 }
 
 .calendar-grid-small .has-event {
-  background: var(--robin-soft);
-  color: var(--robin);
+  background: var(--page-accent-soft);
+  color: var(--page-accent);
   font-weight: 700;
 }
 
 .calendar-day-button.selected {
   background: var(--panel);
-  outline: 2px solid var(--robin);
+  outline: 2px solid var(--page-accent);
 }
 
 .month-events {
@@ -1729,8 +1814,8 @@ input[type='checkbox'] {
 }
 
 .side-list button.active {
-  background: var(--robin-soft);
-  color: var(--robin);
+  background: var(--page-accent-soft);
+  color: var(--page-accent);
   font-weight: 600;
 }
 
@@ -1752,7 +1837,7 @@ input[type='checkbox'] {
 
 .shopping-group h2 {
   border-bottom: 1px solid var(--border);
-  color: var(--robin);
+  color: var(--page-accent);
   font-size: 0.9rem;
   font-weight: 600;
   padding-bottom: 0.35rem;
@@ -1854,15 +1939,15 @@ input[type='checkbox'] {
   width: 48px;
   height: 48px;
   border-radius: var(--r-sm);
-  background: var(--robin-soft);
-  color: var(--robin);
+  background: var(--page-accent-soft);
+  color: var(--page-accent);
   display: grid;
   place-items: center;
 }
 
 .score {
   align-content: center;
-  background: var(--robin);
+  background: var(--page-accent);
   color: var(--panel);
   font-weight: 700;
   line-height: 1;
@@ -1893,8 +1978,8 @@ input[type='checkbox'] {
   width: 42px;
   height: 42px;
   border-radius: var(--r-sm);
-  background: var(--robin-soft);
-  color: var(--robin);
+  background: var(--page-accent-soft);
+  color: var(--page-accent);
   display: grid;
   place-items: center;
 }
@@ -1919,9 +2004,9 @@ input[type='checkbox'] {
 
 .agent-status-metrics article {
   min-height: 62px;
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--page-accent) 16%, var(--border));
   border-radius: var(--r-sm);
-  background: var(--panel-2);
+  background: color-mix(in srgb, var(--page-accent-soft) 42%, var(--panel));
   display: grid;
   align-content: center;
   gap: 0.12rem;
@@ -1999,7 +2084,7 @@ input[type='checkbox'] {
 
 .activity-detail svg {
   margin-top: 0.08rem;
-  color: var(--robin);
+  color: var(--page-accent);
 }
 
 .activity-link {
@@ -2018,7 +2103,7 @@ input[type='checkbox'] {
 }
 
 .note-card-button svg {
-  color: var(--robin);
+  color: var(--page-accent);
 }
 
 .note-detail {
@@ -2044,7 +2129,7 @@ input[type='checkbox'] {
 
 .notification-summary svg,
 .push-box svg {
-  color: var(--robin);
+  color: var(--page-accent);
 }
 
 .push-box {
@@ -2138,7 +2223,7 @@ input[type='checkbox'] {
 
 .contact-facts svg,
 .emergency-card a svg {
-  color: var(--robin);
+  color: var(--page-accent);
   margin-top: 0.08rem;
 }
 
@@ -2271,6 +2356,52 @@ input[type='checkbox'] {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 600;
+}
+
+.page-grid .week-day-card,
+.page-grid .calendar-year-grid .card,
+.page-grid .year-grid .card,
+.page-grid .waste-strip article,
+.page-grid .source-box,
+.page-grid .setup-card,
+.page-grid .notification-summary,
+.page-grid .push-box,
+.page-grid .note-card,
+.page-grid .sorting-results div,
+.page-grid .contact-card,
+.page-grid .emergency-card,
+.page-grid .member-admin-card,
+.page-grid .visibility-grid article,
+.page-grid .security-grid article,
+.page-grid .quality-grid article,
+.page-grid .shopping-row,
+.page-grid .link-row,
+.page-stack .agent-status-card,
+.page-stack .recipe-card,
+.page-stack .activity-card,
+.page-stack .task-card {
+  border: 1px solid color-mix(in srgb, var(--page-accent) 18%, var(--border));
+  background:
+    linear-gradient(180deg, var(--panel) 0%, color-mix(in srgb, var(--page-accent-soft) 30%, var(--panel)) 100%);
+  box-shadow:
+    inset 0 4px 0 color-mix(in srgb, var(--page-accent) 72%, transparent),
+    var(--shadow);
+}
+
+.page-grid .shopping-row,
+.page-grid .link-row,
+.page-stack .task-card {
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--panel) 92%, transparent);
+}
+
+.page-grid .week-day-card.selected,
+.page-stack .task-card.selected,
+.page-grid .note-card-button.selected {
+  border-color: color-mix(in srgb, var(--page-accent) 42%, var(--border));
+  background: var(--page-accent-soft);
+  box-shadow:
+    inset 0 4px 0 color-mix(in srgb, var(--page-accent) 82%, transparent),
+    var(--shadow);
 }
 
 .profile-person-card {
@@ -3022,15 +3153,25 @@ input[type='checkbox'] {
   }
 
   .page-title {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .page-title:has(.page-actions) {
+    grid-template-columns: 1fr;
+  }
+
+  .page-actions {
+    grid-template-columns: 1fr;
+    width: 100%;
   }
 
   .page-title h1 {
-    font-size: 1.8rem;
+    font-size: 2rem;
   }
 
   .card {
-    padding: 0.85rem;
+    --card-pad: 0.85rem;
   }
 
   .agent-status-layout,
