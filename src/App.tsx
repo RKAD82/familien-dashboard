@@ -11,7 +11,7 @@ import { ActivitiesPage } from './pages/ActivitiesPage'
 import { CalendarPage } from './pages/CalendarPage'
 import { ContactsPage } from './pages/ContactsPage'
 import { EmergencyPage } from './pages/EmergencyPage'
-import { InsurancePage } from './pages/InsurancePage'
+import { ExpensesPage } from './pages/ExpensesPage'
 import { InventoryPage } from './pages/InventoryPage'
 import { LinksPage } from './pages/LinksPage'
 import { NotesPage } from './pages/NotesPage'
@@ -67,7 +67,8 @@ const AuthenticatedApp = () => {
         <Route path="abfall" element={<VisibleRoute navId="abfall"><WastePage /></VisibleRoute>} />
         <Route path="rezepte" element={<VisibleRoute navId="rezepte"><RecipesPage /></VisibleRoute>} />
         <Route path="inventar" element={<VisibleRoute navId="inventar"><InventoryPage /></VisibleRoute>} />
-        <Route path="versicherungen" element={<VisibleRoute navId="versicherungen"><InsurancePage /></VisibleRoute>} />
+        <Route path="ausgaben" element={<VisibleRoute navId="versicherungen"><ExpensesPage /></VisibleRoute>} />
+        <Route path="versicherungen" element={<Navigate to="/ausgaben" replace />} />
         <Route path="aktivitaeten" element={<VisibleRoute navId="aktivitaeten"><ActivitiesPage /></VisibleRoute>} />
         <Route path="meldungen" element={<VisibleRoute navId="meldungen"><NotificationsPage /></VisibleRoute>} />
         <Route path="kontakte" element={<VisibleRoute navId="kontakte"><ContactsPage /></VisibleRoute>} />

@@ -756,7 +756,8 @@ code {
   --page-accent-soft: #e7edef;
 }
 
-.insurance-page {
+.insurance-page,
+.expenses-page {
   --page-accent: #4e6d9a;
   --page-accent-soft: #e4ebf5;
 }
@@ -797,6 +798,7 @@ code {
 [data-theme="dark"] .activities-page,
 [data-theme="dark"] .inventory-page,
 [data-theme="dark"] .insurance-page,
+[data-theme="dark"] .expenses-page,
 [data-theme="dark"] .contacts-page,
 [data-theme="dark"] .emergency-page,
 [data-theme="dark"] .notifications-page,
@@ -1611,7 +1613,9 @@ input[type='checkbox'] {
 }
 
 .inventory-item-card,
-.contract-card {
+.contract-card,
+.expense-card {
+  --category-color: var(--page-accent);
   min-height: 254px;
   border: 1px solid color-mix(in srgb, var(--page-accent) 18%, var(--border));
   border-radius: var(--r-sm);
@@ -1649,9 +1653,17 @@ input[type='checkbox'] {
 .house-item-card-header span,
 .house-facts,
 .inventory-item-card p,
-.contract-card p {
+.contract-card p,
+.expense-card p {
   color: var(--muted);
   line-height: 1.4;
+}
+
+.expense-card {
+  border-color: color-mix(in srgb, var(--category-color) 26%, var(--border));
+  box-shadow:
+    inset 0 4px 0 color-mix(in srgb, var(--category-color) 72%, transparent),
+    var(--shadow);
 }
 
 .house-facts {
@@ -1721,6 +1733,121 @@ input[type='checkbox'] {
   color: var(--muted);
   font-size: 0.82rem;
   line-height: 1.35;
+}
+
+.expense-category-card {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.expense-category-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.7rem;
+}
+
+.expense-category-tabs button {
+  --category-color: var(--page-accent);
+  min-height: 86px;
+  border: 1px solid color-mix(in srgb, var(--category-color) 22%, var(--border));
+  border-radius: var(--r-sm);
+  background:
+    linear-gradient(180deg, var(--panel) 0%, color-mix(in srgb, var(--category-color) 10%, var(--panel)) 100%);
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.52rem;
+  padding: 0.78rem;
+  text-align: left;
+  transition:
+    background var(--motion-fast) var(--ease),
+    border-color var(--motion-fast) var(--ease),
+    box-shadow var(--motion-fast) var(--ease),
+    transform var(--motion-fast) var(--ease);
+}
+
+.expense-category-tabs button:hover {
+  transform: translateY(-1px);
+}
+
+.expense-category-tabs button.is-active {
+  border-color: color-mix(in srgb, var(--category-color) 52%, var(--border));
+  background: color-mix(in srgb, var(--category-color) 14%, var(--panel));
+  box-shadow:
+    inset 0 4px 0 color-mix(in srgb, var(--category-color) 76%, transparent),
+    var(--shadow);
+}
+
+.expense-category-tabs svg {
+  color: var(--category-color);
+}
+
+.expense-category-tabs span,
+.expense-category-tabs strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expense-category-tabs span {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.expense-category-tabs strong {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.expense-category-create {
+  margin-top: 0;
+}
+
+.expense-toolbar {
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 210px);
+}
+
+.expense-import-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(240px, 0.85fr);
+  gap: var(--space-4);
+  align-items: stretch;
+}
+
+.expense-import-card .textarea {
+  min-height: 340px;
+  font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.expense-import-help {
+  border: 1px solid color-mix(in srgb, var(--page-accent) 18%, var(--border));
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--page-accent-soft) 42%, var(--panel));
+  display: grid;
+  align-content: start;
+  gap: 0.55rem;
+  padding: 0.9rem;
+}
+
+.expense-import-help svg {
+  color: var(--page-accent);
+}
+
+.expense-import-help strong {
+  color: var(--text);
+}
+
+.expense-import-help span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
 }
 
 .day-items,
@@ -3233,6 +3360,7 @@ input[type='checkbox'] {
 
   .waste-strip,
   .house-overview-grid,
+  .expense-import-layout,
   .security-grid,
   .quality-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3349,6 +3477,8 @@ input[type='checkbox'] {
   .waste-strip,
   .house-overview-grid,
   .house-toolbar,
+  .expense-category-tabs,
+  .expense-import-layout,
   .sorting-results,
   .month-list,
   .collection-grid,

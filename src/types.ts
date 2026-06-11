@@ -241,6 +241,49 @@ export interface ServiceContract {
   updated_at?: string
 }
 
+export type ExpenseBillingCycle = 'monthly' | 'quarterly' | 'yearly' | 'one_time' | 'unknown'
+export type ExpenseStatus = 'active' | 'review' | 'better_offer' | 'cancelled' | 'paused'
+
+export interface ExpenseCategory {
+  id: string
+  family_id: string
+  title: string
+  slug: string
+  color: string
+  icon: string
+  sort_order: number
+  active: boolean
+  created_by: string | null
+  updated_at?: string
+}
+
+export interface ExpenseItem {
+  id: string
+  family_id: string
+  category_id: string
+  title: string
+  provider_name: string | null
+  amount_eur: number | null
+  billing_cycle: ExpenseBillingCycle
+  billing_note: string | null
+  expense_year: number
+  paid_from: string | null
+  contract_until: string | null
+  cancellation_notice: string | null
+  next_review_at: string | null
+  contact_name: string | null
+  phone: string | null
+  email: string | null
+  website_url: string | null
+  customer_number: string | null
+  comparison_url: string | null
+  status: ExpenseStatus
+  notes: string | null
+  source_contract_id?: string | null
+  created_by: string | null
+  updated_at?: string
+}
+
 export interface WasteDistrict {
   id: string
   municipality: string
@@ -405,6 +448,8 @@ export interface DashboardData {
   notes: NoteItem[]
   inventoryItems: InventoryItem[]
   serviceContracts: ServiceContract[]
+  expenseCategories: ExpenseCategory[]
+  expenses: ExpenseItem[]
   wasteDistricts: WasteDistrict[]
   wasteEvents: WasteEvent[]
   wasteSortingItems: WasteSortingItem[]

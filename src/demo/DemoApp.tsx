@@ -7,7 +7,7 @@ import { ActivitiesPage } from '../pages/ActivitiesPage'
 import { CalendarPage } from '../pages/CalendarPage'
 import { ContactsPage } from '../pages/ContactsPage'
 import { EmergencyPage } from '../pages/EmergencyPage'
-import { InsurancePage } from '../pages/InsurancePage'
+import { ExpensesPage } from '../pages/ExpensesPage'
 import { InventoryPage } from '../pages/InventoryPage'
 import { LinksPage } from '../pages/LinksPage'
 import { NotesPage } from '../pages/NotesPage'
@@ -21,7 +21,18 @@ import { TodayPage } from '../pages/TodayPage'
 import { WastePage } from '../pages/WastePage'
 import { WeekPage } from '../pages/WeekPage'
 import type { FamilyActions } from '../routes/context'
-import type { DashboardData, EmergencyItem, FamilyContact, InventoryItem, NoteItem, ServiceContract, ShoppingItem, TaskItem } from '../types'
+import type {
+  DashboardData,
+  EmergencyItem,
+  ExpenseCategory,
+  ExpenseItem,
+  FamilyContact,
+  InventoryItem,
+  NoteItem,
+  ServiceContract,
+  ShoppingItem,
+  TaskItem,
+} from '../types'
 
 const newId = (prefix: string) =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto ? `${prefix}-${crypto.randomUUID()}` : `${prefix}-${Date.now()}`
@@ -388,6 +399,58 @@ export const DemoApp = () => {
           serviceContracts: current.serviceContracts.filter((entry) => entry.id !== contract.id),
         }))
       },
+      createExpenseCategory: async (input) => {
+        const category: ExpenseCategory = {
+          id: newId('expense-category-demo'),
+          family_id: 'demo-family',
+          ...input,
+          created_by: 'demo-user',
+          updated_at: new Date().toISOString(),
+        }
+        setData((current) => ({
+          ...current,
+          expenseCategories: [...current.expenseCategories, category].sort((a, b) => a.sort_order - b.sort_order),
+        }))
+        return category
+      },
+      updateExpenseCategory: async (category, input) => {
+        setData((current) => ({
+          ...current,
+          expenseCategories: current.expenseCategories.map((entry) =>
+            entry.id === category.id ? ({ ...entry, ...input, updated_at: new Date().toISOString() } satisfies ExpenseCategory) : entry,
+          ),
+        }))
+      },
+      createExpense: async (input) => {
+        setData((current) => ({
+          ...current,
+          expenses: [
+            {
+              id: newId('expense-demo'),
+              family_id: current.family.id,
+              ...input,
+              source_contract_id: null,
+              created_by: 'demo-user',
+              updated_at: new Date().toISOString(),
+            } satisfies ExpenseItem,
+            ...current.expenses,
+          ],
+        }))
+      },
+      updateExpense: async (expense, input) => {
+        setData((current) => ({
+          ...current,
+          expenses: current.expenses.map((entry) =>
+            entry.id === expense.id ? ({ ...entry, ...input, updated_at: new Date().toISOString() } satisfies ExpenseItem) : entry,
+          ),
+        }))
+      },
+      deleteExpense: async (expense) => {
+        setData((current) => ({
+          ...current,
+          expenses: current.expenses.filter((entry) => entry.id !== expense.id),
+        }))
+      },
       markNotificationRead: async (delivery) => {
         setData((current) => ({
           ...current,
@@ -500,7 +563,8 @@ export const DemoApp = () => {
         <Route path="abfall" element={<VisibleRoute navId="abfall"><WastePage /></VisibleRoute>} />
         <Route path="rezepte" element={<VisibleRoute navId="rezepte"><RecipesPage /></VisibleRoute>} />
         <Route path="inventar" element={<VisibleRoute navId="inventar"><InventoryPage /></VisibleRoute>} />
-        <Route path="versicherungen" element={<VisibleRoute navId="versicherungen"><InsurancePage /></VisibleRoute>} />
+        <Route path="ausgaben" element={<VisibleRoute navId="versicherungen"><ExpensesPage /></VisibleRoute>} />
+        <Route path="versicherungen" element={<Navigate to="/ausgaben" replace />} />
         <Route path="aktivitaeten" element={<VisibleRoute navId="aktivitaeten"><ActivitiesPage /></VisibleRoute>} />
         <Route path="meldungen" element={<VisibleRoute navId="meldungen"><NotificationsPage /></VisibleRoute>} />
         <Route path="kontakte" element={<VisibleRoute navId="kontakte"><ContactsPage /></VisibleRoute>} />

@@ -11,9 +11,9 @@ import {
   Package,
   Recycle,
   Settings,
-  ShieldCheck,
   ShieldAlert,
   StickyNote,
+  WalletCards,
   type LucideIcon,
 } from 'lucide-react'
 import type { FamilyMembership, NavItemId } from './types'
@@ -37,7 +37,7 @@ export const navigationItems: NavigationItem[] = [
   { id: 'abfall', path: '/abfall', label: 'Abfall', icon: Recycle, defaultVisible: true },
   { id: 'rezepte', path: '/rezepte', label: 'Rezepte', icon: ChefHat, defaultVisible: true },
   { id: 'inventar', path: '/inventar', label: 'Inventar', icon: Package, defaultVisible: true },
-  { id: 'versicherungen', path: '/versicherungen', label: 'Versicherungen', icon: ShieldCheck, defaultVisible: true },
+  { id: 'versicherungen', path: '/ausgaben', label: 'Ausgaben', icon: WalletCards, defaultVisible: true },
   { id: 'aktivitaeten', path: '/aktivitaeten', label: 'Aktivitäten', icon: Map, defaultVisible: true },
   { id: 'meldungen', path: '/meldungen', label: 'Meldungen', icon: Bell, defaultVisible: true },
   { id: 'kontakte', path: '/kontakte', label: 'Kontakte', icon: ContactRound, defaultVisible: true },

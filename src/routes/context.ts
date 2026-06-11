@@ -3,6 +3,8 @@ import type {
   DashboardData,
   EmergencyItem,
   EventItem,
+  ExpenseCategory,
+  ExpenseItem,
   FamilyContact,
   FamilyLink,
   FamilyMembership,
@@ -66,6 +68,31 @@ export type ServiceContractInput = Pick<
   | 'contract_until'
   | 'cancellation_notice'
   | 'next_review_at'
+  | 'comparison_url'
+  | 'status'
+  | 'notes'
+>
+
+export type ExpenseCategoryInput = Pick<ExpenseCategory, 'title' | 'slug' | 'color' | 'icon' | 'sort_order' | 'active'>
+
+export type ExpenseInput = Pick<
+  ExpenseItem,
+  | 'category_id'
+  | 'title'
+  | 'provider_name'
+  | 'amount_eur'
+  | 'billing_cycle'
+  | 'billing_note'
+  | 'expense_year'
+  | 'paid_from'
+  | 'contract_until'
+  | 'cancellation_notice'
+  | 'next_review_at'
+  | 'contact_name'
+  | 'phone'
+  | 'email'
+  | 'website_url'
+  | 'customer_number'
   | 'comparison_url'
   | 'status'
   | 'notes'
@@ -143,6 +170,11 @@ export interface FamilyActions {
   createServiceContract: (input: ServiceContractInput) => Promise<void>
   updateServiceContract: (contract: ServiceContract, input: ServiceContractInput) => Promise<void>
   deleteServiceContract: (contract: ServiceContract) => Promise<void>
+  createExpenseCategory: (input: ExpenseCategoryInput) => Promise<ExpenseCategory>
+  updateExpenseCategory: (category: ExpenseCategory, input: ExpenseCategoryInput) => Promise<void>
+  createExpense: (input: ExpenseInput) => Promise<void>
+  updateExpense: (expense: ExpenseItem, input: ExpenseInput) => Promise<void>
+  deleteExpense: (expense: ExpenseItem) => Promise<void>
   markNotificationRead: (delivery: NotificationDelivery) => Promise<void>
   addRecipeToShoppingList: (listId: string, recipeId: string) => Promise<void>
   archiveRecipe: (recipeId: string, archived: boolean) => Promise<void>

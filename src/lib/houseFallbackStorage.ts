@@ -1,6 +1,7 @@
-import type { InventoryItem, ServiceContract } from '../types'
+import type { ExpenseCategory, ExpenseItem, InventoryItem, ServiceContract } from '../types'
 
-type HouseStorageKey = 'inventoryItems' | 'serviceContracts'
+type HouseStorageItem = InventoryItem | ServiceContract | ExpenseCategory | ExpenseItem
+type HouseStorageKey = 'inventoryItems' | 'serviceContracts' | 'expenseCategories' | 'expenses'
 
 const storagePrefix = 'familien-dashboard-house'
 
@@ -8,7 +9,7 @@ const storageKey = (familyId: string, key: HouseStorageKey) => `${storagePrefix}
 
 const canUseStorage = () => typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
 
-export const readHouseFallback = <T extends InventoryItem | ServiceContract>(familyId: string, key: HouseStorageKey): T[] => {
+export const readHouseFallback = <T extends HouseStorageItem>(familyId: string, key: HouseStorageKey): T[] => {
   if (!canUseStorage()) {
     return []
   }
@@ -20,14 +21,14 @@ export const readHouseFallback = <T extends InventoryItem | ServiceContract>(fam
   }
 }
 
-const writeHouseFallback = <T extends InventoryItem | ServiceContract>(familyId: string, key: HouseStorageKey, items: T[]) => {
+const writeHouseFallback = <T extends HouseStorageItem>(familyId: string, key: HouseStorageKey, items: T[]) => {
   if (!canUseStorage()) {
     return
   }
   window.localStorage.setItem(storageKey(familyId, key), JSON.stringify(items))
 }
 
-export const upsertHouseFallback = <T extends InventoryItem | ServiceContract>(familyId: string, key: HouseStorageKey, item: T) => {
+export const upsertHouseFallback = <T extends HouseStorageItem>(familyId: string, key: HouseStorageKey, item: T) => {
   const current = readHouseFallback<T>(familyId, key)
   const next = current.some((entry) => entry.id === item.id)
     ? current.map((entry) => (entry.id === item.id ? item : entry))
@@ -36,7 +37,7 @@ export const upsertHouseFallback = <T extends InventoryItem | ServiceContract>(f
   return next
 }
 
-export const deleteHouseFallback = <T extends InventoryItem | ServiceContract>(familyId: string, key: HouseStorageKey, itemId: string) => {
+export const deleteHouseFallback = <T extends HouseStorageItem>(familyId: string, key: HouseStorageKey, itemId: string) => {
   const next = readHouseFallback<T>(familyId, key).filter((entry) => entry.id !== itemId)
   writeHouseFallback(familyId, key, next)
   return next

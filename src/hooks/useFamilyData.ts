@@ -18,6 +18,9 @@ import type {
   DashboardData,
   EmergencyItem,
   EventItem,
+  ExpenseBillingCycle,
+  ExpenseCategory,
+  ExpenseItem,
   Family,
   FamilyContact,
   FamilyLink,
@@ -55,6 +58,8 @@ const emptyData = (family: Family): DashboardData => ({
   notes: [],
   inventoryItems: [],
   serviceContracts: [],
+  expenseCategories: [],
+  expenses: [],
   wasteDistricts: [],
   wasteEvents: [],
   wasteSortingItems: [],
@@ -68,6 +73,89 @@ const emptyData = (family: Family): DashboardData => ({
 
 const newLocalHouseId = (prefix: string) =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto ? `${prefix}-${crypto.randomUUID()}` : `${prefix}-${Date.now()}`
+
+const expenseCategoryTemplates = [
+  { title: 'Haushalt', slug: 'haushalt', color: '#5f766e', icon: 'home', sort_order: 10 },
+  { title: 'Versicherungen', slug: 'versicherungen', color: '#4e6d9a', icon: 'shield', sort_order: 20 },
+  { title: 'Abos', slug: 'abos', color: '#8a6b47', icon: 'repeat', sort_order: 30 },
+  { title: 'Mobilität', slug: 'mobilitaet', color: '#6d5d90', icon: 'car', sort_order: 40 },
+  { title: 'Freizeit', slug: 'freizeit', color: '#8a5d71', icon: 'sparkles', sort_order: 50 },
+  { title: 'Sonstiges', slug: 'sonstiges', color: '#69737a', icon: 'folder', sort_order: 90 },
+]
+
+const defaultExpenseCategoriesForFamily = (familyId: string): ExpenseCategory[] =>
+  expenseCategoryTemplates.map((category) => ({
+    id: `expense-category-local-${category.slug}`,
+    family_id: familyId,
+    title: category.title,
+    slug: category.slug,
+    color: category.color,
+    icon: category.icon,
+    sort_order: category.sort_order,
+    active: true,
+    created_by: null,
+  }))
+
+const expenseCategorySlug = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'ausgaben'
+
+const billingCycleFromLegacy = (value: string | null): ExpenseBillingCycle => {
+  const normalized = value?.toLowerCase() ?? ''
+  if (normalized.includes('monat')) return 'monthly'
+  if (normalized.includes('quart')) return 'quarterly'
+  if (normalized.includes('einmal')) return 'one_time'
+  if (normalized.includes('jahr') || normalized.includes('jähr')) return 'yearly'
+  return 'yearly'
+}
+
+const legacyContractsToExpenses = (
+  familyId: string,
+  contracts: ServiceContract[],
+  categories: ExpenseCategory[],
+): ExpenseItem[] => {
+  const categoryBySlug = new Map(categories.map((category) => [category.slug, category]))
+  return contracts.map((contract) => {
+    const kind = contract.kind.toLowerCase()
+    const slug = kind.includes('versicherung')
+      ? 'versicherungen'
+      : ['strom', 'gas', 'wasser', 'internet', 'mobilfunk'].some((needle) => kind.includes(needle))
+        ? 'haushalt'
+        : 'sonstiges'
+    const category = categoryBySlug.get(slug) ?? categories[0]
+    return {
+      id: `expense-from-contract-${contract.id}`,
+      family_id: familyId,
+      category_id: category?.id ?? `expense-category-local-${slug}`,
+      title: contract.product_name,
+      provider_name: contract.provider_name,
+      amount_eur: contract.annual_cost_eur,
+      billing_cycle: billingCycleFromLegacy(contract.billing_cycle),
+      billing_note: contract.billing_cycle,
+      expense_year: contract.next_review_at ? Number(contract.next_review_at.slice(0, 4)) : new Date().getFullYear(),
+      paid_from: null,
+      contract_until: contract.contract_until,
+      cancellation_notice: contract.cancellation_notice,
+      next_review_at: contract.next_review_at,
+      contact_name: contract.contact_name,
+      phone: contract.phone,
+      email: contract.email,
+      website_url: contract.website_url,
+      customer_number: contract.customer_number,
+      comparison_url: contract.comparison_url,
+      status: contract.status,
+      notes: contract.notes,
+      source_contract_id: contract.id,
+      created_by: contract.created_by,
+      updated_at: contract.updated_at,
+    }
+  })
+}
 
 export const useFamilyData = (family: Family | null, userId: string | null) => {
   const [data, setData] = useState<DashboardData | null>(family ? emptyData(family) : null)
@@ -104,6 +192,8 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       notes,
       inventoryItems,
       serviceContracts,
+      expenseCategories,
+      expenses,
       districts,
       recipes,
       recipeSuggestions,
@@ -121,6 +211,8 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       supabase.from('notes').select('*').eq('family_id', familyId).order('updated_at', { ascending: false }),
       supabase.from('inventory_items').select('*').eq('family_id', familyId).order('updated_at', { ascending: false }),
       supabase.from('service_contracts').select('*').eq('family_id', familyId).order('next_review_at', { nullsFirst: false }),
+      supabase.from('expense_categories').select('*').eq('family_id', familyId).eq('active', true).order('sort_order').order('title'),
+      supabase.from('expenses').select('*').eq('family_id', familyId).order('expense_year', { ascending: false }).order('updated_at', { ascending: false }),
       supabase.from('waste_districts').select('*').eq('active', true),
       supabase.from('recipes').select('*').eq('family_id', familyId).order('status').order('title'),
       supabase.from('recipe_suggestions').select('*, recipe:recipes(*)').eq('family_id', familyId).order('rank'),
@@ -152,6 +244,8 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       notes,
       inventoryItems,
       serviceContracts,
+      expenseCategories,
+      expenses,
       districts,
       recipes,
       recipeSuggestions,
@@ -203,6 +297,22 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         category_name: item.category?.name ?? item.category_name,
       })) ?? []
 
+    const contractData = isMissingOptionalTable(serviceContracts.error)
+      ? readHouseFallback<ServiceContract>(familyId, 'serviceContracts')
+      : ((serviceContracts.data as ServiceContract[] | null) ?? [])
+    const fallbackExpenseCategories = readHouseFallback<ExpenseCategory>(familyId, 'expenseCategories')
+    const categoryData = isMissingOptionalTable(expenseCategories.error)
+      ? fallbackExpenseCategories.length
+        ? fallbackExpenseCategories
+        : defaultExpenseCategoriesForFamily(familyId)
+      : ((expenseCategories.data as ExpenseCategory[] | null) ?? [])
+    const fallbackExpenses = readHouseFallback<ExpenseItem>(familyId, 'expenses')
+    const expenseData = isMissingOptionalTable(expenses.error)
+      ? fallbackExpenses.length
+        ? fallbackExpenses
+        : legacyContractsToExpenses(familyId, contractData, categoryData)
+      : ((expenses.data as ExpenseItem[] | null) ?? [])
+
     setData({
       family,
       memberships: (
@@ -225,9 +335,9 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       inventoryItems: isMissingOptionalTable(inventoryItems.error)
         ? readHouseFallback<InventoryItem>(familyId, 'inventoryItems')
         : ((inventoryItems.data as InventoryItem[] | null) ?? []),
-      serviceContracts: isMissingOptionalTable(serviceContracts.error)
-        ? readHouseFallback<ServiceContract>(familyId, 'serviceContracts')
-        : ((serviceContracts.data as ServiceContract[] | null) ?? []),
+      serviceContracts: contractData,
+      expenseCategories: categoryData,
+      expenses: expenseData,
       wasteDistricts: (districts.data as WasteDistrict[] | null) ?? [],
       wasteEvents: (wasteEvents.data as WasteEvent[] | null) ?? [],
       wasteSortingItems: normalizedSortingItems,
@@ -299,6 +409,20 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
           void loadData()
         },
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'expense_categories', filter: `family_id=eq.${familyId}` },
+        () => {
+          void loadData()
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'expenses', filter: `family_id=eq.${familyId}` },
+        () => {
+          void loadData()
+        },
+      )
       .subscribe()
 
     return () => {
@@ -312,6 +436,14 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
 
   const setLocalServiceContracts = useCallback((contracts: ServiceContract[]) => {
     setData((current) => (current ? { ...current, serviceContracts: contracts } : current))
+  }, [])
+
+  const setLocalExpenseCategories = useCallback((categories: ExpenseCategory[]) => {
+    setData((current) => (current ? { ...current, expenseCategories: categories } : current))
+  }, [])
+
+  const setLocalExpenses = useCallback((expenses: ExpenseItem[]) => {
+    setData((current) => (current ? { ...current, expenses } : current))
   }, [])
 
   const actions = useMemo(
@@ -906,6 +1038,141 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         }
         await loadData()
       },
+      createExpenseCategory: async (
+        input: Pick<ExpenseCategory, 'title' | 'slug' | 'color' | 'icon' | 'sort_order' | 'active'>,
+      ) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          throw new Error('Keine aktive Familie gefunden.')
+        }
+        const payload = { ...input, slug: input.slug || expenseCategorySlug(input.title), family_id: familyId, created_by: userId }
+        const { data: category, error: insertError } = await client.from('expense_categories').insert(payload).select().single()
+        if (insertError) {
+          if (isMissingOptionalTable(insertError)) {
+            const localCategory: ExpenseCategory = {
+              id: newLocalHouseId('expense-category-local'),
+              ...payload,
+              updated_at: new Date().toISOString(),
+            }
+            const nextCategories = upsertHouseFallback(familyId, 'expenseCategories', localCategory)
+            setLocalExpenseCategories(nextCategories)
+            return localCategory
+          }
+          throw insertError
+        }
+        await loadData()
+        return category as ExpenseCategory
+      },
+      updateExpenseCategory: async (
+        category: ExpenseCategory,
+        input: Pick<ExpenseCategory, 'title' | 'slug' | 'color' | 'icon' | 'sort_order' | 'active'>,
+      ) => {
+        const client = requireSupabase()
+        const payload = { ...input, slug: input.slug || expenseCategorySlug(input.title), updated_at: new Date().toISOString() }
+        const { error: updateError } = await client.from('expense_categories').update(payload).eq('id', category.id)
+        if (updateError) {
+          if (familyId && isMissingOptionalTable(updateError)) {
+            setLocalExpenseCategories(upsertHouseFallback(familyId, 'expenseCategories', { ...category, ...payload }))
+            return
+          }
+          throw updateError
+        }
+        await loadData()
+      },
+      createExpense: async (
+        input: Pick<
+          ExpenseItem,
+          | 'category_id'
+          | 'title'
+          | 'provider_name'
+          | 'amount_eur'
+          | 'billing_cycle'
+          | 'billing_note'
+          | 'expense_year'
+          | 'paid_from'
+          | 'contract_until'
+          | 'cancellation_notice'
+          | 'next_review_at'
+          | 'contact_name'
+          | 'phone'
+          | 'email'
+          | 'website_url'
+          | 'customer_number'
+          | 'comparison_url'
+          | 'status'
+          | 'notes'
+        >,
+      ) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          return
+        }
+        const payload = { ...input, family_id: familyId, created_by: userId }
+        const { error: insertError } = await client.from('expenses').insert(payload)
+        if (insertError) {
+          if (isMissingOptionalTable(insertError)) {
+            const localExpense: ExpenseItem = {
+              id: newLocalHouseId('expense-local'),
+              ...payload,
+              source_contract_id: null,
+              updated_at: new Date().toISOString(),
+            }
+            setLocalExpenses(upsertHouseFallback(familyId, 'expenses', localExpense))
+            return
+          }
+          throw insertError
+        }
+        await loadData()
+      },
+      updateExpense: async (
+        expense: ExpenseItem,
+        input: Pick<
+          ExpenseItem,
+          | 'category_id'
+          | 'title'
+          | 'provider_name'
+          | 'amount_eur'
+          | 'billing_cycle'
+          | 'billing_note'
+          | 'expense_year'
+          | 'paid_from'
+          | 'contract_until'
+          | 'cancellation_notice'
+          | 'next_review_at'
+          | 'contact_name'
+          | 'phone'
+          | 'email'
+          | 'website_url'
+          | 'customer_number'
+          | 'comparison_url'
+          | 'status'
+          | 'notes'
+        >,
+      ) => {
+        const client = requireSupabase()
+        const payload = { ...input, updated_at: new Date().toISOString() }
+        const { error: updateError } = await client.from('expenses').update(payload).eq('id', expense.id)
+        if (updateError) {
+          if (familyId && isMissingOptionalTable(updateError)) {
+            setLocalExpenses(upsertHouseFallback(familyId, 'expenses', { ...expense, ...payload }))
+            return
+          }
+          throw updateError
+        }
+        await loadData()
+      },
+      deleteExpense: async (expense: ExpenseItem) => {
+        const client = requireSupabase()
+        const { error: deleteError } = await client.from('expenses').delete().eq('id', expense.id)
+        if (deleteError) {
+          if (familyId && isMissingOptionalTable(deleteError)) {
+            setLocalExpenses(deleteHouseFallback<ExpenseItem>(familyId, 'expenses', expense.id))
+            return
+          }
+          throw deleteError
+        }
+        await loadData()
+      },
       markNotificationRead: async (delivery: NotificationDelivery) => {
         const client = requireSupabase()
         const { error: updateError } = await client
@@ -1075,7 +1342,18 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         await loadData()
       },
     }),
-    [data?.recipeIngredients, data?.recipes, data?.shoppingItems, familyId, loadData, setLocalInventoryItems, setLocalServiceContracts, userId],
+    [
+      data?.recipeIngredients,
+      data?.recipes,
+      data?.shoppingItems,
+      familyId,
+      loadData,
+      setLocalExpenseCategories,
+      setLocalExpenses,
+      setLocalInventoryItems,
+      setLocalServiceContracts,
+      userId,
+    ],
   )
 
   return { data, loading, error, actions }
