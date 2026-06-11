@@ -2,6 +2,7 @@ import { Mail, MapPin, Phone, Plus, Smartphone, Star } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useFamilyRoute } from '../routes/context'
 import { Button, Card, EmptyState, Field, Tag, TextArea, TextInput } from '../components/ui'
+import { formatMirrorDate } from '../lib/offlineMirror'
 
 export const ContactsPage = () => {
   const { data, actions } = useFamilyRoute()
@@ -18,6 +19,7 @@ export const ContactsPage = () => {
 
   const contacts = [...data.contacts].sort((a, b) => Number(b.favorite) - Number(a.favorite) || a.name.localeCompare(b.name))
   const favoriteContacts = contacts.filter((contact) => contact.favorite).length
+  const offlineMirror = data.offlineMirror?.fromMirror ? data.offlineMirror : null
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -79,6 +81,7 @@ export const ContactsPage = () => {
           <p>Telefon, Handy, Adresse und Bemerkungen für wichtige Familienkontakte.</p>
         </div>
         <div className="page-actions">
+          {offlineMirror && <Tag tone="warn">Offline-Stand vom {formatMirrorDate(offlineMirror.mirroredAt)}</Tag>}
           <Tag>{contacts.length} Kontakte</Tag>
           <Tag tone="warn">{favoriteContacts} wichtig</Tag>
         </div>

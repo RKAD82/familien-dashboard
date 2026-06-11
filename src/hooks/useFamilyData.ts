@@ -11,6 +11,7 @@ import {
   type UpdateFamilyNoteInput,
 } from '../lib/familyCrud'
 import { deleteHouseFallback, readHouseFallback, upsertHouseFallback } from '../lib/houseFallbackStorage'
+import { createOfflineMirrorData, saveMirror } from '../lib/offlineMirror'
 import { requireSupabase, supabase } from '../lib/supabase'
 import type {
   ActivitySuggestion,
@@ -158,7 +159,7 @@ const legacyContractsToExpenses = (
 }
 
 export const useFamilyData = (family: Family | null, userId: string | null) => {
-  const [data, setData] = useState<DashboardData | null>(family ? emptyData(family) : null)
+  const [data, setData] = useState<DashboardData | null>(family ? (createOfflineMirrorData(family) ?? emptyData(family)) : null)
   const [loading, setLoading] = useState(Boolean(family))
   const [error, setError] = useState<string | null>(null)
   const hasLoadedRef = useRef(false)
@@ -170,8 +171,14 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
   }, [familyId])
 
   const loadData = useCallback(async () => {
-    if (!familyId || !family || !supabase) {
+    if (!familyId || !family) {
       setData(null)
+      setLoading(false)
+      return
+    }
+
+    if (!supabase) {
+      setData(createOfflineMirrorData(family) ?? emptyData(family))
       setLoading(false)
       return
     }
@@ -255,6 +262,13 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
     ].find((result) => result.error && !isMissingOptionalTable(result.error))
 
     if (firstError?.error) {
+      const mirroredData = createOfflineMirrorData(family)
+      if (mirroredData) {
+        setData(mirroredData)
+        hasLoadedRef.current = true
+        setLoading(false)
+        return
+      }
       setError(firstError.error.message)
       setLoading(false)
       return
@@ -286,6 +300,13 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
 
     const secondError = [shoppingItems, links, wasteEvents, wasteSortingItems, recipeIngredients].find((result) => result.error)
     if (secondError?.error) {
+      const mirroredData = createOfflineMirrorData(family)
+      if (mirroredData) {
+        setData(mirroredData)
+        hasLoadedRef.current = true
+        setLoading(false)
+        return
+      }
       setError(secondError.error.message)
       setLoading(false)
       return
@@ -312,6 +333,15 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         ? fallbackExpenses
         : legacyContractsToExpenses(familyId, contractData, categoryData)
       : ((expenses.data as ExpenseItem[] | null) ?? [])
+    const contactData = isMissingOptionalTable(contacts.error) ? [] : ((contacts.data as FamilyContact[] | null) ?? [])
+    const emergencyData = isMissingOptionalTable(emergencyItems.error) ? [] : ((emergencyItems.data as EmergencyItem[] | null) ?? [])
+
+    if (!isMissingOptionalTable(contacts.error) && !contacts.error) {
+      saveMirror(familyId, 'contacts', contactData)
+    }
+    if (!isMissingOptionalTable(emergencyItems.error) && !emergencyItems.error) {
+      saveMirror(familyId, 'emergencyItems', emergencyData)
+    }
 
     setData({
       family,
@@ -329,8 +359,8 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       shoppingItems: (shoppingItems.data as ShoppingItem[] | null) ?? [],
       linkCollections: (linkCollections.data as LinkCollection[] | null) ?? [],
       links: (links.data as FamilyLink[] | null) ?? [],
-      contacts: isMissingOptionalTable(contacts.error) ? [] : ((contacts.data as FamilyContact[] | null) ?? []),
-      emergencyItems: isMissingOptionalTable(emergencyItems.error) ? [] : ((emergencyItems.data as EmergencyItem[] | null) ?? []),
+      contacts: contactData,
+      emergencyItems: emergencyData,
       notes: (notes.data as NoteItem[] | null) ?? [],
       inventoryItems: isMissingOptionalTable(inventoryItems.error)
         ? readHouseFallback<InventoryItem>(familyId, 'inventoryItems')

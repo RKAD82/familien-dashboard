@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react'
 import { useFamilyRoute } from '../routes/context'
 import type { EmergencyItemType } from '../types'
 import { Button, Card, EmptyState, Field, Select, Tag, TextArea, TextInput } from '../components/ui'
+import { formatMirrorDate } from '../lib/offlineMirror'
 
 const typeLabels: Record<EmergencyItemType, string> = {
   contact: 'Notfallkontakt',
@@ -35,6 +36,7 @@ export const EmergencyPage = () => {
   const [editingId, setEditingId] = useState<string | null>(null)
   const emergencyItems = [...data.emergencyItems].sort((a, b) => a.priority - b.priority || a.title.localeCompare(b.title))
   const urgentItems = emergencyItems.filter((item) => item.priority <= 2).length
+  const offlineMirror = data.offlineMirror?.fromMirror ? data.offlineMirror : null
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -99,6 +101,7 @@ export const EmergencyPage = () => {
           <p>Notfallkontakte, wichtige Nummern, Adressen und Hinweise an einem Ort.</p>
         </div>
         <div className="page-actions">
+          {offlineMirror && <Tag tone="warn">Offline-Stand vom {formatMirrorDate(offlineMirror.mirroredAt)}</Tag>}
           <Tag>{emergencyItems.length} Einträge</Tag>
           <Tag tone={urgentItems ? 'warn' : 'info'}>{urgentItems} höchste Priorität</Tag>
         </div>

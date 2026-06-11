@@ -460,4 +460,8 @@ export interface DashboardData {
   activitySuggestions: ActivitySuggestion[]
   activityAgentRuns: ActivityAgentRun[]
   notificationDeliveries: NotificationDelivery[]
+  offlineMirror?: {
+    fromMirror: boolean
+    mirroredAt: string | null
+  }
 }
