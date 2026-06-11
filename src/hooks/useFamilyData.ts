@@ -10,6 +10,7 @@ import {
   type UpdateFamilyLinkInput,
   type UpdateFamilyNoteInput,
 } from '../lib/familyCrud'
+import { deleteHouseFallback, readHouseFallback, upsertHouseFallback } from '../lib/houseFallbackStorage'
 import { requireSupabase, supabase } from '../lib/supabase'
 import type {
   ActivitySuggestion,
@@ -20,6 +21,7 @@ import type {
   Family,
   FamilyContact,
   FamilyLink,
+  InventoryItem,
   LinkCollection,
   NoteItem,
   NotificationDelivery,
@@ -27,6 +29,7 @@ import type {
   RecipeIngredient,
   RecipeSuggestion,
   Role,
+  ServiceContract,
   ShoppingItem,
   ShoppingList,
   TaskItem,
@@ -50,6 +53,8 @@ const emptyData = (family: Family): DashboardData => ({
   contacts: [],
   emergencyItems: [],
   notes: [],
+  inventoryItems: [],
+  serviceContracts: [],
   wasteDistricts: [],
   wasteEvents: [],
   wasteSortingItems: [],
@@ -60,6 +65,9 @@ const emptyData = (family: Family): DashboardData => ({
   activityAgentRuns: [],
   notificationDeliveries: [],
 })
+
+const newLocalHouseId = (prefix: string) =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto ? `${prefix}-${crypto.randomUUID()}` : `${prefix}-${Date.now()}`
 
 export const useFamilyData = (family: Family | null, userId: string | null) => {
   const [data, setData] = useState<DashboardData | null>(family ? emptyData(family) : null)
@@ -94,6 +102,8 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       contacts,
       emergencyItems,
       notes,
+      inventoryItems,
+      serviceContracts,
       districts,
       recipes,
       recipeSuggestions,
@@ -109,6 +119,8 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       supabase.from('family_contacts').select('*').eq('family_id', familyId).order('favorite', { ascending: false }).order('name'),
       supabase.from('emergency_items').select('*').eq('family_id', familyId).order('priority').order('title'),
       supabase.from('notes').select('*').eq('family_id', familyId).order('updated_at', { ascending: false }),
+      supabase.from('inventory_items').select('*').eq('family_id', familyId).order('updated_at', { ascending: false }),
+      supabase.from('service_contracts').select('*').eq('family_id', familyId).order('next_review_at', { nullsFirst: false }),
       supabase.from('waste_districts').select('*').eq('active', true),
       supabase.from('recipes').select('*').eq('family_id', familyId).order('status').order('title'),
       supabase.from('recipe_suggestions').select('*, recipe:recipes(*)').eq('family_id', familyId).order('rank'),
@@ -138,6 +150,8 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       contacts,
       emergencyItems,
       notes,
+      inventoryItems,
+      serviceContracts,
       districts,
       recipes,
       recipeSuggestions,
@@ -208,6 +222,12 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       contacts: isMissingOptionalTable(contacts.error) ? [] : ((contacts.data as FamilyContact[] | null) ?? []),
       emergencyItems: isMissingOptionalTable(emergencyItems.error) ? [] : ((emergencyItems.data as EmergencyItem[] | null) ?? []),
       notes: (notes.data as NoteItem[] | null) ?? [],
+      inventoryItems: isMissingOptionalTable(inventoryItems.error)
+        ? readHouseFallback<InventoryItem>(familyId, 'inventoryItems')
+        : ((inventoryItems.data as InventoryItem[] | null) ?? []),
+      serviceContracts: isMissingOptionalTable(serviceContracts.error)
+        ? readHouseFallback<ServiceContract>(familyId, 'serviceContracts')
+        : ((serviceContracts.data as ServiceContract[] | null) ?? []),
       wasteDistricts: (districts.data as WasteDistrict[] | null) ?? [],
       wasteEvents: (wasteEvents.data as WasteEvent[] | null) ?? [],
       wasteSortingItems: normalizedSortingItems,
@@ -265,12 +285,34 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
           void loadData()
         },
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'inventory_items', filter: `family_id=eq.${familyId}` },
+        () => {
+          void loadData()
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'service_contracts', filter: `family_id=eq.${familyId}` },
+        () => {
+          void loadData()
+        },
+      )
       .subscribe()
 
     return () => {
       void client.removeChannel(channel)
     }
   }, [familyId, loadData])
+
+  const setLocalInventoryItems = useCallback((items: InventoryItem[]) => {
+    setData((current) => (current ? { ...current, inventoryItems: items } : current))
+  }, [])
+
+  const setLocalServiceContracts = useCallback((contracts: ServiceContract[]) => {
+    setData((current) => (current ? { ...current, serviceContracts: contracts } : current))
+  }, [])
 
   const actions = useMemo(
     () => ({
@@ -702,6 +744,168 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         await deleteFamilyNoteRecord(client, note)
         await loadData()
       },
+      createInventoryItem: async (
+        input: Pick<
+          InventoryItem,
+          | 'title'
+          | 'category'
+          | 'location'
+          | 'purchase_date'
+          | 'warranty_until'
+          | 'value_eur'
+          | 'serial_number'
+          | 'document_url'
+          | 'condition'
+          | 'notes'
+        >,
+      ) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          return
+        }
+        const payload = { ...input, family_id: familyId, created_by: userId }
+        const { error: insertError } = await client.from('inventory_items').insert(payload)
+        if (insertError) {
+          if (isMissingOptionalTable(insertError)) {
+            const localItem: InventoryItem = {
+              id: newLocalHouseId('inventory-local'),
+              ...payload,
+              updated_at: new Date().toISOString(),
+            }
+            setLocalInventoryItems(upsertHouseFallback(familyId, 'inventoryItems', localItem))
+            return
+          }
+          throw insertError
+        }
+        await loadData()
+      },
+      updateInventoryItem: async (
+        item: InventoryItem,
+        input: Pick<
+          InventoryItem,
+          | 'title'
+          | 'category'
+          | 'location'
+          | 'purchase_date'
+          | 'warranty_until'
+          | 'value_eur'
+          | 'serial_number'
+          | 'document_url'
+          | 'condition'
+          | 'notes'
+        >,
+      ) => {
+        const client = requireSupabase()
+        const payload = { ...input, updated_at: new Date().toISOString() }
+        const { error: updateError } = await client.from('inventory_items').update(payload).eq('id', item.id)
+        if (updateError) {
+          if (familyId && isMissingOptionalTable(updateError)) {
+            setLocalInventoryItems(upsertHouseFallback(familyId, 'inventoryItems', { ...item, ...payload }))
+            return
+          }
+          throw updateError
+        }
+        await loadData()
+      },
+      deleteInventoryItem: async (item: InventoryItem) => {
+        const client = requireSupabase()
+        const { error: deleteError } = await client.from('inventory_items').delete().eq('id', item.id)
+        if (deleteError) {
+          if (familyId && isMissingOptionalTable(deleteError)) {
+            setLocalInventoryItems(deleteHouseFallback<InventoryItem>(familyId, 'inventoryItems', item.id))
+            return
+          }
+          throw deleteError
+        }
+        await loadData()
+      },
+      createServiceContract: async (
+        input: Pick<
+          ServiceContract,
+          | 'kind'
+          | 'provider_name'
+          | 'product_name'
+          | 'contact_name'
+          | 'phone'
+          | 'email'
+          | 'website_url'
+          | 'customer_number'
+          | 'annual_cost_eur'
+          | 'billing_cycle'
+          | 'contract_until'
+          | 'cancellation_notice'
+          | 'next_review_at'
+          | 'comparison_url'
+          | 'status'
+          | 'notes'
+        >,
+      ) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          return
+        }
+        const payload = { ...input, family_id: familyId, created_by: userId }
+        const { error: insertError } = await client.from('service_contracts').insert(payload)
+        if (insertError) {
+          if (isMissingOptionalTable(insertError)) {
+            const localContract: ServiceContract = {
+              id: newLocalHouseId('contract-local'),
+              ...payload,
+              updated_at: new Date().toISOString(),
+            }
+            setLocalServiceContracts(upsertHouseFallback(familyId, 'serviceContracts', localContract))
+            return
+          }
+          throw insertError
+        }
+        await loadData()
+      },
+      updateServiceContract: async (
+        contract: ServiceContract,
+        input: Pick<
+          ServiceContract,
+          | 'kind'
+          | 'provider_name'
+          | 'product_name'
+          | 'contact_name'
+          | 'phone'
+          | 'email'
+          | 'website_url'
+          | 'customer_number'
+          | 'annual_cost_eur'
+          | 'billing_cycle'
+          | 'contract_until'
+          | 'cancellation_notice'
+          | 'next_review_at'
+          | 'comparison_url'
+          | 'status'
+          | 'notes'
+        >,
+      ) => {
+        const client = requireSupabase()
+        const payload = { ...input, updated_at: new Date().toISOString() }
+        const { error: updateError } = await client.from('service_contracts').update(payload).eq('id', contract.id)
+        if (updateError) {
+          if (familyId && isMissingOptionalTable(updateError)) {
+            setLocalServiceContracts(upsertHouseFallback(familyId, 'serviceContracts', { ...contract, ...payload }))
+            return
+          }
+          throw updateError
+        }
+        await loadData()
+      },
+      deleteServiceContract: async (contract: ServiceContract) => {
+        const client = requireSupabase()
+        const { error: deleteError } = await client.from('service_contracts').delete().eq('id', contract.id)
+        if (deleteError) {
+          if (familyId && isMissingOptionalTable(deleteError)) {
+            setLocalServiceContracts(deleteHouseFallback<ServiceContract>(familyId, 'serviceContracts', contract.id))
+            return
+          }
+          throw deleteError
+        }
+        await loadData()
+      },
       markNotificationRead: async (delivery: NotificationDelivery) => {
         const client = requireSupabase()
         const { error: updateError } = await client
@@ -871,7 +1075,7 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
         await loadData()
       },
     }),
-    [data?.recipeIngredients, data?.recipes, data?.shoppingItems, familyId, loadData, userId],
+    [data?.recipeIngredients, data?.recipes, data?.shoppingItems, familyId, loadData, setLocalInventoryItems, setLocalServiceContracts, userId],
   )
 
   return { data, loading, error, actions }

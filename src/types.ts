@@ -197,6 +197,50 @@ export interface NoteItem {
   updated_at?: string
 }
 
+export type InventoryCondition = 'ok' | 'watch' | 'repair' | 'replace'
+
+export interface InventoryItem {
+  id: string
+  family_id: string
+  title: string
+  category: string
+  location: string
+  purchase_date: string | null
+  warranty_until: string | null
+  value_eur: number | null
+  serial_number: string | null
+  document_url: string | null
+  condition: InventoryCondition
+  notes: string | null
+  created_by: string | null
+  updated_at?: string
+}
+
+export type ServiceContractStatus = 'active' | 'review' | 'better_offer' | 'cancelled'
+
+export interface ServiceContract {
+  id: string
+  family_id: string
+  kind: string
+  provider_name: string
+  product_name: string
+  contact_name: string | null
+  phone: string | null
+  email: string | null
+  website_url: string | null
+  customer_number: string | null
+  annual_cost_eur: number | null
+  billing_cycle: string | null
+  contract_until: string | null
+  cancellation_notice: string | null
+  next_review_at: string | null
+  comparison_url: string | null
+  status: ServiceContractStatus
+  notes: string | null
+  created_by: string | null
+  updated_at?: string
+}
+
 export interface WasteDistrict {
   id: string
   municipality: string
@@ -359,6 +403,8 @@ export interface DashboardData {
   contacts: FamilyContact[]
   emergencyItems: EmergencyItem[]
   notes: NoteItem[]
+  inventoryItems: InventoryItem[]
+  serviceContracts: ServiceContract[]
   wasteDistricts: WasteDistrict[]
   wasteEvents: WasteEvent[]
   wasteSortingItems: WasteSortingItem[]

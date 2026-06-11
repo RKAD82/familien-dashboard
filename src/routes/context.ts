@@ -6,10 +6,12 @@ import type {
   FamilyContact,
   FamilyLink,
   FamilyMembership,
+  InventoryItem,
   NoteItem,
   NotificationDelivery,
   NavItemId,
   Role,
+  ServiceContract,
   ShoppingItem,
   ShoppingList,
   TaskItem,
@@ -43,6 +45,31 @@ export type CreateLinkInput = Pick<
 export type UpdateLinkInput = CreateLinkInput
 
 export type NoteInput = Pick<NoteItem, 'title' | 'body' | 'category' | 'visibility' | 'is_important' | 'notify_family'>
+
+export type InventoryItemInput = Pick<
+  InventoryItem,
+  'title' | 'category' | 'location' | 'purchase_date' | 'warranty_until' | 'value_eur' | 'serial_number' | 'document_url' | 'condition' | 'notes'
+>
+
+export type ServiceContractInput = Pick<
+  ServiceContract,
+  | 'kind'
+  | 'provider_name'
+  | 'product_name'
+  | 'contact_name'
+  | 'phone'
+  | 'email'
+  | 'website_url'
+  | 'customer_number'
+  | 'annual_cost_eur'
+  | 'billing_cycle'
+  | 'contract_until'
+  | 'cancellation_notice'
+  | 'next_review_at'
+  | 'comparison_url'
+  | 'status'
+  | 'notes'
+>
 
 export type CreateFamilyContactInput = Pick<
   FamilyContact,
@@ -110,6 +137,12 @@ export interface FamilyActions {
   createNote: (input: NoteInput) => Promise<void>
   updateNote: (note: NoteItem, input: NoteInput) => Promise<void>
   deleteNote: (note: NoteItem) => Promise<void>
+  createInventoryItem: (input: InventoryItemInput) => Promise<void>
+  updateInventoryItem: (item: InventoryItem, input: InventoryItemInput) => Promise<void>
+  deleteInventoryItem: (item: InventoryItem) => Promise<void>
+  createServiceContract: (input: ServiceContractInput) => Promise<void>
+  updateServiceContract: (contract: ServiceContract, input: ServiceContractInput) => Promise<void>
+  deleteServiceContract: (contract: ServiceContract) => Promise<void>
   markNotificationRead: (delivery: NotificationDelivery) => Promise<void>
   addRecipeToShoppingList: (listId: string, recipeId: string) => Promise<void>
   archiveRecipe: (recipeId: string, archived: boolean) => Promise<void>

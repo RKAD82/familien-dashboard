@@ -1558,6 +1558,141 @@ input[type='checkbox'] {
   gap: var(--space-4);
 }
 
+.house-form-card,
+.house-status-card {
+  min-height: 100%;
+}
+
+.house-metric-grid {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.house-metric-grid article {
+  min-height: 72px;
+  border: 1px solid color-mix(in srgb, var(--page-accent) 16%, var(--border));
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--page-accent-soft) 42%, var(--panel));
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.68rem;
+}
+
+.house-metric-grid svg {
+  color: var(--page-accent);
+}
+
+.house-metric-grid strong {
+  display: block;
+  color: var(--text);
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.house-metric-grid span {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.house-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 260px);
+  gap: 0.75rem;
+  margin-bottom: 0.95rem;
+}
+
+.house-item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.85rem;
+}
+
+.inventory-item-card,
+.contract-card {
+  min-height: 254px;
+  border: 1px solid color-mix(in srgb, var(--page-accent) 18%, var(--border));
+  border-radius: var(--r-sm);
+  background:
+    linear-gradient(180deg, var(--panel) 0%, color-mix(in srgb, var(--page-accent-soft) 28%, var(--panel)) 100%);
+  box-shadow:
+    inset 0 4px 0 color-mix(in srgb, var(--page-accent) 72%, transparent),
+    var(--shadow);
+  display: grid;
+  align-content: start;
+  gap: 0.78rem;
+  padding: 0.95rem;
+}
+
+.house-item-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.house-item-card-header div {
+  min-width: 0;
+  display: grid;
+  gap: 0.18rem;
+}
+
+.house-item-card-header strong {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.house-item-card-header span,
+.house-facts,
+.inventory-item-card p,
+.contract-card p {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.house-facts {
+  display: grid;
+  gap: 0.38rem;
+  font-size: 0.84rem;
+}
+
+.house-facts span,
+.house-contact-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  flex-wrap: wrap;
+}
+
+.house-facts svg,
+.house-contact-row svg {
+  color: var(--page-accent);
+  flex: 0 0 auto;
+}
+
+.house-contact-row,
+.house-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.62rem;
+}
+
+.house-card-actions {
+  align-self: end;
+  border-top: 1px solid color-mix(in srgb, var(--page-accent) 16%, var(--border));
+  margin-top: 0.2rem;
+  padding-top: 0.72rem;
+}
+
+.danger-link {
+  color: var(--urgent);
+}
+
 .house-overview-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3213,6 +3348,7 @@ input[type='checkbox'] {
 
   .waste-strip,
   .house-overview-grid,
+  .house-toolbar,
   .sorting-results,
   .month-list,
   .collection-grid,

@@ -21,7 +21,7 @@ import { TodayPage } from '../pages/TodayPage'
 import { WastePage } from '../pages/WastePage'
 import { WeekPage } from '../pages/WeekPage'
 import type { FamilyActions } from '../routes/context'
-import type { DashboardData, EmergencyItem, FamilyContact, NoteItem, ShoppingItem, TaskItem } from '../types'
+import type { DashboardData, EmergencyItem, FamilyContact, InventoryItem, NoteItem, ServiceContract, ShoppingItem, TaskItem } from '../types'
 
 const newId = (prefix: string) =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto ? `${prefix}-${crypto.randomUUID()}` : `${prefix}-${Date.now()}`
@@ -328,6 +328,64 @@ export const DemoApp = () => {
         setData((current) => ({
           ...current,
           notes: current.notes.filter((entry) => entry.id !== note.id),
+        }))
+      },
+      createInventoryItem: async (input) => {
+        setData((current) => ({
+          ...current,
+          inventoryItems: [
+            {
+              id: newId('inventory-demo'),
+              family_id: current.family.id,
+              ...input,
+              created_by: 'demo-user',
+              updated_at: new Date().toISOString(),
+            } satisfies InventoryItem,
+            ...current.inventoryItems,
+          ],
+        }))
+      },
+      updateInventoryItem: async (item, input) => {
+        setData((current) => ({
+          ...current,
+          inventoryItems: current.inventoryItems.map((entry) =>
+            entry.id === item.id ? ({ ...entry, ...input, updated_at: new Date().toISOString() } satisfies InventoryItem) : entry,
+          ),
+        }))
+      },
+      deleteInventoryItem: async (item) => {
+        setData((current) => ({
+          ...current,
+          inventoryItems: current.inventoryItems.filter((entry) => entry.id !== item.id),
+        }))
+      },
+      createServiceContract: async (input) => {
+        setData((current) => ({
+          ...current,
+          serviceContracts: [
+            {
+              id: newId('contract-demo'),
+              family_id: current.family.id,
+              ...input,
+              created_by: 'demo-user',
+              updated_at: new Date().toISOString(),
+            } satisfies ServiceContract,
+            ...current.serviceContracts,
+          ],
+        }))
+      },
+      updateServiceContract: async (contract, input) => {
+        setData((current) => ({
+          ...current,
+          serviceContracts: current.serviceContracts.map((entry) =>
+            entry.id === contract.id ? ({ ...entry, ...input, updated_at: new Date().toISOString() } satisfies ServiceContract) : entry,
+          ),
+        }))
+      },
+      deleteServiceContract: async (contract) => {
+        setData((current) => ({
+          ...current,
+          serviceContracts: current.serviceContracts.filter((entry) => entry.id !== contract.id),
         }))
       },
       markNotificationRead: async (delivery) => {
