@@ -4,6 +4,7 @@ import { ThemeToggle } from '../components/ThemeToggle'
 import { Button, Card, Field, Select, Tag, TextInput } from '../components/ui'
 import { appConfig } from '../config'
 import { useAuth } from '../hooks/useAuth'
+import { appBuildInfo, formatBuildDate } from '../lib/buildInfo'
 import { navigationItems, visibleNavIdsForMembership } from '../navigation'
 import { useFamilyRoute } from '../routes/context'
 import type { FamilyMembership, NavItemId, Role } from '../types'
@@ -319,6 +320,7 @@ export const SettingsPage = () => {
           <GitBranch size={24} />
           <strong>GitHub Pages</strong>
           <code>{appConfig.basePath}</code>
+          <span>Version {appBuildInfo.commit} · Build {formatBuildDate(appBuildInfo.buildDate)}</span>
           <span>Vor jedem Upload lokal prüfen: Typecheck, Lint, Tests und Build.</span>
         </div>
       </Card>

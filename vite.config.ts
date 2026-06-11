@@ -1,9 +1,22 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { execSync } from 'node:child_process'
+
+const readGitCommit = () => {
+  try {
+    return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim()
+  } catch {
+    return 'dev'
+  }
+}
 
 export default defineConfig({
   base: process.env.VITE_BASE_PATH ?? '/familien-dashboard/',
+  define: {
+    __APP_COMMIT__: JSON.stringify(process.env.VITE_APP_COMMIT ?? readGitCommit()),
+    __APP_BUILD_DATE__: JSON.stringify(process.env.VITE_APP_BUILD_DATE ?? new Date().toISOString()),
+  },
   plugins: [
     react(),
     VitePWA({

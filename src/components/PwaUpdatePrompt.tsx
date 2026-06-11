@@ -5,6 +5,7 @@ export const PwaUpdatePrompt = () => {
   const [available, setAvailable] = useState(() =>
     typeof window !== 'undefined' ? Boolean(window.familienDashboardUpdateAvailable) : false,
   )
+  const [reloading, setReloading] = useState(false)
 
   useEffect(() => {
     const listener = () => setAvailable(true)
@@ -14,11 +15,17 @@ export const PwaUpdatePrompt = () => {
 
   if (!available) return null
 
+  const reloadApp = async () => {
+    setReloading(true)
+    await window.familienDashboardUpdateSW?.(true)
+    window.location.reload()
+  }
+
   return (
-    <div className="pwa-update-banner" role="status">
-      <span>Neue Version verfügbar.</span>
-      <button type="button" onClick={() => void window.familienDashboardUpdateSW?.(true)}>
-        Jetzt aktualisieren
+    <div className="pwa-update-banner" role="status" aria-live="polite">
+      <span>Neue Version verfügbar - neu laden.</span>
+      <button type="button" onClick={() => void reloadApp()} disabled={reloading}>
+        {reloading ? 'Wird geladen...' : 'Neu laden'}
       </button>
     </div>
   )

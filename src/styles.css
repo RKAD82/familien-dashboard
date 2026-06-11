@@ -4,16 +4,35 @@
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --bg: #f5f3ef;
-  --panel: #ffffff;
-  --panel-2: #faf8f4;
-  --inset: #f1ede6;
-  --border: #ebe5dc;
-  --border-soft: #f0ece4;
-  --text: #1c2528;
-  --text-soft: #5a625f;
-  --muted: #8b8881;
-  --robin: #2f6b6b;
+  --color-app-bg: #f5f3ef;
+  --color-surface: #ffffff;
+  --color-surface-muted: #faf8f4;
+  --color-inset: #f1ede6;
+  --color-border: #ebe5dc;
+  --color-border-soft: #f0ece4;
+  --color-text-primary: #1c2528;
+  --color-text-secondary: #5a625f;
+  --color-text-muted: #8b8881;
+  --color-brand-primary: #345c52;
+  --color-warning: #b5402f;
+  --color-success: #3f7a52;
+  --color-interaction: #3c6d9b;
+  --shadow-elevation-1: 0 1px 2px rgb(28 37 40 / 4%), 0 12px 32px rgb(28 37 40 / 5%);
+  --font-size-xs: 0.72rem;
+  --font-size-sm: 0.82rem;
+  --font-size-md: 0.94rem;
+  --font-size-lg: 1.15rem;
+  --font-size-xl: 1.65rem;
+  --bg: var(--color-app-bg);
+  --panel: var(--color-surface);
+  --panel-2: var(--color-surface-muted);
+  --inset: var(--color-inset);
+  --border: var(--color-border);
+  --border-soft: var(--color-border-soft);
+  --text: var(--color-text-primary);
+  --text-soft: var(--color-text-secondary);
+  --muted: var(--color-text-muted);
+  --robin: var(--color-brand-primary);
   --robin-soft: #e3eeec;
   --nadja: #c2603f;
   --nadja-soft: #f6e6df;
@@ -23,11 +42,11 @@
   --leonas-soft: #f6eed9;
   --now: #e0823b;
   --now-soft: #fbeddb;
-  --done: #3f7a52;
+  --done: var(--color-success);
   --done-soft: #e7f0e9;
-  --urgent: #b5402f;
+  --urgent: var(--color-warning);
   --urgent-soft: #f7e4e0;
-  --info: #3c6d9b;
+  --info: var(--color-interaction);
   --info-soft: #e3edf5;
   --r-sm: 8px;
   --r-md: 8px;
@@ -39,8 +58,8 @@
   --space-4: 1rem;
   --space-5: 1.5rem;
   --space-6: 2rem;
-  --shadow: 0 1px 2px rgb(28 37 40 / 4%), 0 12px 32px rgb(28 37 40 / 5%);
-  --shadow-lg: 0 2px 4px rgb(28 37 40 / 5%), 0 22px 50px rgb(28 37 40 / 7%);
+  --shadow: var(--shadow-elevation-1);
+  --shadow-lg: var(--shadow-elevation-1);
   --motion-fast: 130ms;
   --motion-normal: 220ms;
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -62,16 +81,30 @@
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #121516;
-  --panel: #1c2123;
-  --panel-2: #191e20;
-  --inset: #23292b;
-  --border: #2b3234;
-  --border-soft: #242a2c;
-  --text: #edf1ef;
-  --text-soft: #aab4b2;
-  --muted: #7f8a89;
-  --robin: #5fa8a8;
+  --color-app-bg: #121516;
+  --color-surface: #1c2123;
+  --color-surface-muted: #191e20;
+  --color-inset: #23292b;
+  --color-border: #2b3234;
+  --color-border-soft: #242a2c;
+  --color-text-primary: #edf1ef;
+  --color-text-secondary: #aab4b2;
+  --color-text-muted: #7f8a89;
+  --color-brand-primary: #75aaa1;
+  --color-warning: #e27768;
+  --color-success: #6fb487;
+  --color-interaction: #7ca7d1;
+  --shadow-elevation-1: 0 1px 2px rgb(0 0 0 / 20%), 0 14px 34px rgb(0 0 0 / 18%);
+  --bg: var(--color-app-bg);
+  --panel: var(--color-surface);
+  --panel-2: var(--color-surface-muted);
+  --inset: var(--color-inset);
+  --border: var(--color-border);
+  --border-soft: var(--color-border-soft);
+  --text: var(--color-text-primary);
+  --text-soft: var(--color-text-secondary);
+  --muted: var(--color-text-muted);
+  --robin: var(--color-brand-primary);
   --robin-soft: #1e3535;
   --nadja: #e08b66;
   --nadja-soft: #3a2820;
@@ -81,14 +114,14 @@
   --leonas-soft: #3a3019;
   --now: #f0a368;
   --now-soft: #33271b;
-  --done: #6fb487;
+  --done: var(--color-success);
   --done-soft: #1f2e26;
-  --urgent: #e27768;
+  --urgent: var(--color-warning);
   --urgent-soft: #321f1d;
-  --info: #7ca7d1;
+  --info: var(--color-interaction);
   --info-soft: #1f2c38;
-  --shadow: 0 1px 2px rgb(0 0 0 / 20%), 0 14px 34px rgb(0 0 0 / 18%);
-  --shadow-lg: 0 2px 4px rgb(0 0 0 / 28%), 0 24px 52px rgb(0 0 0 / 28%);
+  --shadow: var(--shadow-elevation-1);
+  --shadow-lg: var(--shadow-elevation-1);
 }
 
 * {
@@ -452,6 +485,25 @@ code {
 .sidebar .button-ghost {
   margin-top: 0;
   color: var(--text-soft);
+}
+
+.sidebar-version {
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 0.15rem 0.2rem 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.sidebar-version code {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--muted);
+  font-size: inherit;
 }
 
 .photo-avatar {

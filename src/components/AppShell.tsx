@@ -4,6 +4,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { addDays, formatDay, formatLongDate, startOfWeek, toDateKey } from '../lib/date'
 import { memberAvatarColor, memberInitials } from '../lib/assignments'
 import { resolveViewedMembership } from '../lib/userView'
+import { appBuildInfo } from '../lib/buildInfo'
 import { isNavItemVisible, mobileNavItemIds, navigationItems } from '../navigation'
 import { useAuth } from '../hooks/useAuth'
 import type { FamilyActions } from '../routes/context'
@@ -219,6 +220,10 @@ export const AppShell = ({
           <LogOut size={18} />
           Abmelden
         </Button>
+        <div className="sidebar-version">
+          <span>Version</span>
+          <code>{appBuildInfo.commit}</code>
+        </div>
       </aside>
 
       <header className="mobile-topbar">
