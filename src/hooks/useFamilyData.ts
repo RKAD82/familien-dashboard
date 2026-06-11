@@ -626,13 +626,18 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
       createShoppingList: async (input: Pick<ShoppingList, 'title' | 'store_type' | 'is_template'>) => {
         const client = requireSupabase()
         if (!familyId) {
-          return
+          throw new Error('Keine aktive Familie gefunden.')
         }
-        const { error: insertError } = await client.from('shopping_lists').insert({ ...input, family_id: familyId, archived: false })
+        const { data: created, error: insertError } = await client
+          .from('shopping_lists')
+          .insert({ ...input, family_id: familyId, archived: false })
+          .select()
+          .single()
         if (insertError) {
           throw insertError
         }
         await loadData()
+        return created as ShoppingList
       },
       updateShoppingList: async (list: ShoppingList, input: Pick<ShoppingList, 'title' | 'store_type' | 'is_template'> & { archived: boolean }) => {
         const client = requireSupabase()
@@ -748,6 +753,22 @@ export const useFamilyData = (family: Family | null, userId: string | null) => {
           throw insertError
         }
         await loadData()
+      },
+      createLinkCollection: async (input: Pick<LinkCollection, 'title' | 'sort_order'>) => {
+        const client = requireSupabase()
+        if (!familyId) {
+          throw new Error('Keine aktive Familie gefunden.')
+        }
+        const { data: created, error: insertError } = await client
+          .from('link_collections')
+          .insert({ ...input, family_id: familyId })
+          .select()
+          .single()
+        if (insertError) {
+          throw insertError
+        }
+        await loadData()
+        return created as LinkCollection
       },
       updateLink: async (link: FamilyLink, input: UpdateFamilyLinkInput) => {
         const client = requireSupabase()

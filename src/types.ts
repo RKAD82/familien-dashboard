@@ -12,6 +12,7 @@ export type NavItemId =
   | 'rezepte'
   | 'inventar'
   | 'versicherungen'
+  | 'import'
   | 'aktivitaeten'
   | 'meldungen'
   | 'kontakte'

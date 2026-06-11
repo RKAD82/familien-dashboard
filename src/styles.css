@@ -254,13 +254,15 @@ code {
 .sidebar {
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: 100dvh;
   border-right: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 1.6rem 1.1rem;
 }
 
@@ -762,6 +764,11 @@ code {
   --page-accent-soft: #e4ebf5;
 }
 
+.import-page {
+  --page-accent: #6b6f58;
+  --page-accent-soft: #ebece2;
+}
+
 .contacts-page {
   --page-accent: #476d92;
   --page-accent-soft: #e3edf5;
@@ -799,6 +806,7 @@ code {
 [data-theme="dark"] .inventory-page,
 [data-theme="dark"] .insurance-page,
 [data-theme="dark"] .expenses-page,
+[data-theme="dark"] .import-page,
 [data-theme="dark"] .contacts-page,
 [data-theme="dark"] .emergency-page,
 [data-theme="dark"] .notifications-page,
@@ -1530,7 +1538,8 @@ input[type='checkbox'] {
 }
 
 .calendar-page {
-  grid-template-columns: minmax(300px, 0.9fr) minmax(0, 2.1fr);
+  width: min(100%, 1540px);
+  grid-template-columns: minmax(280px, 390px) minmax(0, 1fr);
 }
 
 .calendar-form-card,
@@ -1538,16 +1547,26 @@ input[type='checkbox'] {
   min-height: 100%;
 }
 
+.calendar-form-card {
+  grid-column: 1;
+}
+
+.calendar-day-detail-card {
+  grid-column: 1;
+}
+
 .calendar-day-detail-card .timeline-item {
   grid-template-columns: 70px minmax(0, 1fr) auto auto;
 }
 
 .calendar-year-grid {
+  grid-column: 2;
+  grid-row: 2 / span 2;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .calendar-year-grid .card {
-  min-height: 254px;
+  min-height: 244px;
 }
 
 .house-page {
@@ -1848,6 +1867,65 @@ input[type='checkbox'] {
   color: var(--muted);
   font-size: 0.86rem;
   line-height: 1.45;
+}
+
+.import-source-card .textarea {
+  min-height: 420px;
+  font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.import-rules-card {
+  min-height: 100%;
+}
+
+.import-preview-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.import-preview-list article {
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--page-accent) 16%, var(--border));
+  border-radius: var(--r-sm);
+  background: var(--panel);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  padding: 0.86rem;
+}
+
+.import-preview-list article.has-errors {
+  border-color: color-mix(in srgb, var(--urgent) 38%, var(--border));
+  background: color-mix(in srgb, var(--urgent-soft) 42%, var(--panel));
+}
+
+.import-preview-list article div {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.import-preview-list article strong,
+.import-preview-list article span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.import-preview-list article span,
+.import-preview-list article p {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.import-preview-list article p {
+  grid-column: 1 / -1;
+  margin: 0;
+  line-height: 1.45;
+  white-space: normal;
 }
 
 .day-items,
@@ -3226,6 +3304,8 @@ input[type='checkbox'] {
     position: fixed;
     z-index: 20;
     width: min(86vw, 320px);
+    max-height: 100dvh;
+    padding-bottom: calc(1.1rem + env(safe-area-inset-bottom));
     transform: translateX(-104%);
     transition: transform var(--motion-normal) var(--ease);
   }
@@ -3341,6 +3421,18 @@ input[type='checkbox'] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .calendar-page {
+    width: min(100%, 1180px);
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-form-card,
+  .calendar-day-detail-card,
+  .calendar-year-grid {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
   .agent-status-layout {
     grid-template-columns: 44px minmax(0, 1fr);
   }
@@ -3361,6 +3453,7 @@ input[type='checkbox'] {
   .waste-strip,
   .house-overview-grid,
   .expense-import-layout,
+  .import-preview-list,
   .security-grid,
   .quality-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3479,6 +3572,7 @@ input[type='checkbox'] {
   .house-toolbar,
   .expense-category-tabs,
   .expense-import-layout,
+  .import-preview-list,
   .sorting-results,
   .month-list,
   .collection-grid,

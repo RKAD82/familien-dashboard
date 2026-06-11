@@ -8,6 +8,7 @@ import { CalendarPage } from '../pages/CalendarPage'
 import { ContactsPage } from '../pages/ContactsPage'
 import { EmergencyPage } from '../pages/EmergencyPage'
 import { ExpensesPage } from '../pages/ExpensesPage'
+import { ImportPage } from '../pages/ImportPage'
 import { InventoryPage } from '../pages/InventoryPage'
 import { LinksPage } from '../pages/LinksPage'
 import { NotesPage } from '../pages/NotesPage'
@@ -143,10 +144,12 @@ export const DemoApp = () => {
         }))
       },
       createShoppingList: async (input) => {
+        const list = { id: newId('list-demo'), family_id: 'demo-family', archived: false, ...input }
         setData((current) => ({
           ...current,
-          shoppingLists: [{ id: newId('list-demo'), family_id: current.family.id, archived: false, ...input }, ...current.shoppingLists],
+          shoppingLists: [list, ...current.shoppingLists],
         }))
+        return list
       },
       updateShoppingList: async (list, input) => {
         setData((current) => ({
@@ -234,6 +237,14 @@ export const DemoApp = () => {
             ...current.links,
           ],
         }))
+      },
+      createLinkCollection: async (input) => {
+        const collection = { id: newId('links-demo'), family_id: 'demo-family', title: input.title, sort_order: input.sort_order }
+        setData((current) => ({
+          ...current,
+          linkCollections: [...current.linkCollections, collection].sort((a, b) => a.sort_order - b.sort_order),
+        }))
+        return collection
       },
       updateLink: async (link, input) => {
         setData((current) => ({
@@ -565,6 +576,7 @@ export const DemoApp = () => {
         <Route path="inventar" element={<VisibleRoute navId="inventar"><InventoryPage /></VisibleRoute>} />
         <Route path="ausgaben" element={<VisibleRoute navId="versicherungen"><ExpensesPage /></VisibleRoute>} />
         <Route path="versicherungen" element={<Navigate to="/ausgaben" replace />} />
+        <Route path="import" element={<VisibleRoute navId="import"><ImportPage /></VisibleRoute>} />
         <Route path="aktivitaeten" element={<VisibleRoute navId="aktivitaeten"><ActivitiesPage /></VisibleRoute>} />
         <Route path="meldungen" element={<VisibleRoute navId="meldungen"><NotificationsPage /></VisibleRoute>} />
         <Route path="kontakte" element={<VisibleRoute navId="kontakte"><ContactsPage /></VisibleRoute>} />

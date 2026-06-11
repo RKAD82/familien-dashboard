@@ -212,7 +212,7 @@ export const CalendarPage = () => {
 
       <Card
         title={formatLongDate(`${selectedDate}T09:00:00`)}
-        className="span-2 calendar-day-detail-card"
+        className="calendar-day-detail-card"
         action={<Tag tone={selectedEvents.length ? 'info' : 'neutral'}>{selectedEvents.length || 'frei'}</Tag>}
       >
         {selectedEvents.length ? (
@@ -247,7 +247,7 @@ export const CalendarPage = () => {
         )}
       </Card>
 
-      <div className="year-grid calendar-year-grid span-3">
+      <div className="year-grid calendar-year-grid">
         {months.map((month) => {
           const monthEvents = yearEvents.filter((event) => {
             const date = new Date(event.starts_at)

@@ -37,7 +37,7 @@ const weatherLabels: Record<number, string> = {
 const navigationGroups: { label: string; ids: NavItemId[] }[] = [
   { label: 'Zeit', ids: ['heute', 'woche', 'kalender'] },
   { label: 'Tun', ids: ['aufgaben', 'einkauf', 'links', 'notizen', 'abfall', 'rezepte'] },
-  { label: 'Haus', ids: ['inventar', 'versicherungen'] },
+  { label: 'Haus', ids: ['inventar', 'versicherungen', 'import'] },
   { label: 'Familie', ids: ['aktivitaeten', 'meldungen', 'kontakte', 'notfall', 'system'] },
 ]
 

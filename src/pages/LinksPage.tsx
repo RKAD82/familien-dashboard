@@ -20,6 +20,7 @@ export const LinksPage = () => {
   const [description, setDescription] = useState('')
   const [favorite, setFavorite] = useState(true)
   const [editingLink, setEditingLink] = useState<FamilyLink | null>(null)
+  const [newCollectionTitle, setNewCollectionTitle] = useState('')
   const activeCollection = data.linkCollections.find((collection) => collection.id === collectionId) ?? data.linkCollections[0]
   const favoriteLinks = data.links.filter((link) => link.favorite).length
 
@@ -65,6 +66,17 @@ export const LinksPage = () => {
     resetForm()
   }
 
+  const onCreateCollection = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!newCollectionTitle.trim()) return
+    const collection = await actions.createLinkCollection({
+      title: newCollectionTitle.trim(),
+      sort_order: data.linkCollections.length + 1,
+    })
+    setNewCollectionTitle('')
+    setCollectionId(collection.id)
+  }
+
   return (
     <div className="page-grid links-page">
       <section className="page-title span-3">
@@ -90,38 +102,48 @@ export const LinksPage = () => {
           ) : null
         }
       >
-        {activeCollection ? (
-          <form className="form-stack" onSubmit={onSubmit}>
-            <Field label="Sammlung">
-              <Select value={activeCollection.id} onChange={(event) => setCollectionId(event.target.value)}>
-                {data.linkCollections.map((collection) => (
-                  <option key={collection.id} value={collection.id}>
-                    {collection.title}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Titel">
-              <TextInput value={title} onChange={(event) => setTitle(event.target.value)} />
-            </Field>
-            <Field label="Adresse">
-              <TextInput placeholder="https://..." value={url} onChange={(event) => setUrl(event.target.value)} />
-            </Field>
-            <Field label="Beschreibung">
-              <TextInput value={description} onChange={(event) => setDescription(event.target.value)} />
-            </Field>
-            <label className="check-line">
-              <input type="checkbox" checked={favorite} onChange={(event) => setFavorite(event.target.checked)} />
-              Als Favorit anzeigen
-            </label>
-            <Button type="submit">
-              {editingLink ? <Pencil size={18} /> : <Plus size={18} />}
-              {editingLink ? 'Änderungen speichern' : 'Link speichern'}
+        <div className="form-stack">
+          <form className="inline-form link-collection-create" onSubmit={onCreateCollection}>
+            <TextInput placeholder="Neue Sammlung, z. B. Schule" value={newCollectionTitle} onChange={(event) => setNewCollectionTitle(event.target.value)} />
+            <Button variant="secondary" type="submit">
+              <Plus size={18} />
+              Sammlung anlegen
             </Button>
           </form>
-        ) : (
-          <EmptyState title="Keine Sammlung" body="Es muss zuerst eine Linksammlung vorhanden sein." />
-        )}
+
+          {activeCollection ? (
+            <form className="form-stack" onSubmit={onSubmit}>
+              <Field label="Sammlung">
+                <Select value={activeCollection.id} onChange={(event) => setCollectionId(event.target.value)}>
+                  {data.linkCollections.map((collection) => (
+                    <option key={collection.id} value={collection.id}>
+                      {collection.title}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Titel">
+                <TextInput value={title} onChange={(event) => setTitle(event.target.value)} />
+              </Field>
+              <Field label="Adresse">
+                <TextInput placeholder="https://..." value={url} onChange={(event) => setUrl(event.target.value)} />
+              </Field>
+              <Field label="Beschreibung">
+                <TextInput value={description} onChange={(event) => setDescription(event.target.value)} />
+              </Field>
+              <label className="check-line">
+                <input type="checkbox" checked={favorite} onChange={(event) => setFavorite(event.target.checked)} />
+                Als Favorit anzeigen
+              </label>
+              <Button type="submit">
+                {editingLink ? <Pencil size={18} /> : <Plus size={18} />}
+                {editingLink ? 'Änderungen speichern' : 'Link speichern'}
+              </Button>
+            </form>
+          ) : (
+            <EmptyState title="Keine Sammlung" body="Bitte zuerst eine Sammlung anlegen." />
+          )}
+        </div>
       </Card>
 
       <div className="collection-grid span-2">

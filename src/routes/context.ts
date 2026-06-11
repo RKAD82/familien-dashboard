@@ -9,6 +9,7 @@ import type {
   FamilyLink,
   FamilyMembership,
   InventoryItem,
+  LinkCollection,
   NoteItem,
   NotificationDelivery,
   NavItemId,
@@ -38,6 +39,7 @@ export type CreateEventInput = Pick<
 
 export type CreateShoppingItemInput = Pick<ShoppingItem, 'title' | 'quantity' | 'unit' | 'category' | 'source_label'>
 export type CreateShoppingListInput = Pick<ShoppingList, 'title' | 'store_type' | 'is_template'>
+export type CreateLinkCollectionInput = Pick<LinkCollection, 'title' | 'sort_order'>
 
 export type CreateLinkInput = Pick<
   FamilyLink,
@@ -143,7 +145,7 @@ export interface FamilyActions {
   updateTaskStatus: (task: TaskItem, status: TaskItem['status']) => Promise<void>
   deleteTask: (task: TaskItem) => Promise<void>
   addShoppingItem: (listId: string, input: CreateShoppingItemInput) => Promise<void>
-  createShoppingList: (input: CreateShoppingListInput) => Promise<void>
+  createShoppingList: (input: CreateShoppingListInput) => Promise<ShoppingList>
   updateShoppingList: (list: ShoppingList, input: CreateShoppingListInput & { archived: boolean }) => Promise<void>
   deleteShoppingList: (list: ShoppingList) => Promise<void>
   copyShoppingListFromTemplate: (template: ShoppingList, title: string) => Promise<void>
@@ -153,6 +155,7 @@ export interface FamilyActions {
   clearShoppingList: (listId: string, checkedOnly: boolean) => Promise<void>
   resetDemoData?: () => Promise<void>
   createLink: (input: CreateLinkInput) => Promise<void>
+  createLinkCollection: (input: CreateLinkCollectionInput) => Promise<LinkCollection>
   updateLink: (link: FamilyLink, input: UpdateLinkInput) => Promise<void>
   deleteLink: (link: FamilyLink) => Promise<void>
   createFamilyContact: (input: CreateFamilyContactInput) => Promise<void>

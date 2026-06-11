@@ -17,9 +17,20 @@ const updateSW = registerSW({
   },
   onRegisteredSW(_swUrl, registration) {
     if (registration) {
-      setInterval(() => {
+      const checkForUpdate = () => {
         void registration.update()
+      }
+
+      setInterval(() => {
+        checkForUpdate()
       }, 60 * 60 * 1000)
+
+      window.addEventListener('focus', checkForUpdate)
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          checkForUpdate()
+        }
+      })
     }
   },
 })

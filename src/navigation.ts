@@ -13,6 +13,7 @@ import {
   Settings,
   ShieldAlert,
   StickyNote,
+  Upload,
   WalletCards,
   type LucideIcon,
 } from 'lucide-react'
@@ -38,6 +39,7 @@ export const navigationItems: NavigationItem[] = [
   { id: 'rezepte', path: '/rezepte', label: 'Rezepte', icon: ChefHat, defaultVisible: true },
   { id: 'inventar', path: '/inventar', label: 'Inventar', icon: Package, defaultVisible: true },
   { id: 'versicherungen', path: '/ausgaben', label: 'Ausgaben', icon: WalletCards, defaultVisible: true },
+  { id: 'import', path: '/import', label: 'Import', icon: Upload, defaultVisible: true },
   { id: 'aktivitaeten', path: '/aktivitaeten', label: 'Aktivitäten', icon: Map, defaultVisible: true },
   { id: 'meldungen', path: '/meldungen', label: 'Meldungen', icon: Bell, defaultVisible: true },
   { id: 'kontakte', path: '/kontakte', label: 'Kontakte', icon: ContactRound, defaultVisible: true },
