@@ -1,0 +1,22 @@
+Kontakte Importvorlage
+
+--- EINTRAG ---
+Name (MUSS):
+Bezug:
+Telefon:
+Handy:
+E-Mail:
+Adresse:
+Bemerkungen:
+Als wichtigen Kontakt markieren: nein
+
+--- EINTRAG ---
+Name (MUSS):
+Bezug:
+Telefon:
+Handy:
+E-Mail:
+Adresse:
+Bemerkungen:
+Als wichtigen Kontakt markieren: nein
+

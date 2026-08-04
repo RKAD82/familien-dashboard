@@ -1,0 +1,25 @@
+Inventar Importvorlage
+
+--- EINTRAG ---
+Name (MUSS):
+Kategorie:
+Standort:
+Kaufdatum:
+Garantie bis:
+Wert EUR:
+Seriennummer:
+Zustand:
+Dokument-Link:
+Notiz:
+
+--- EINTRAG ---
+Name (MUSS):
+Kategorie:
+Standort:
+Kaufdatum:
+Garantie bis:
+Wert EUR:
+Seriennummer:
+Zustand:
+Dokument-Link:
+Notiz:

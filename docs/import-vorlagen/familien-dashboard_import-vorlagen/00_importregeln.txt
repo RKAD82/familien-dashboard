@@ -1,0 +1,49 @@
+Familien-Dashboard Importvorlagen
+
+Grundregel:
+Jeder neue Datensatz beginnt mit:
+
+--- EINTRAG ---
+
+Danach folgen immer Felder im gleichen Rhythmus:
+
+Feldname: Wert
+
+Pflichtfelder:
+Felder mit (MUSS) muessen ausgefuellt werden.
+
+Optionale Felder:
+Wenn ein Feld nicht passt oder noch unbekannt ist, hinter dem Doppelpunkt leer lassen.
+Die Zeile trotzdem stehen lassen.
+
+Datum:
+Bitte immer im Format JJJJ-MM-TT schreiben.
+Beispiel: 2026-06-14
+Alternativ erkennt der Import auch TT.MM.JJJJ.
+
+Uhrzeit:
+Bitte im Format HH:MM schreiben.
+Beispiel: 17:30
+
+Ja/Nein:
+Bitte nur ja oder nein schreiben.
+
+Betrag:
+Bitte nur die Zahl eintragen.
+Beispiel: 14,99
+
+Mehrere Eintraege:
+Den kompletten Block ab --- EINTRAG --- kopieren und darunter erneut ausfuellen.
+
+Nicht frei formulieren:
+Bitte keine neuen Feldnamen erfinden, wenn es spaeter automatisch eingelesen werden soll.
+Zusaetzliche Informationen in das Feld Notiz schreiben.
+
+Abgleich mit der App:
+Die Feldnamen in den Vorlagen orientieren sich an den sichtbaren Formularfeldern der App.
+Wenn ein Feld nur fuer den Import zur Zuordnung gebraucht wird, steht es in der Vorlage mit einem klaren Namen.
+
+Kategorien:
+In vielen Bereichen gibt es aktuell keine zentrale Kategorieverwaltung.
+Kategorien werden dort direkt im jeweiligen Feld eingetippt.
+Eine neue Kategorie entsteht also durch den Text im Feld Kategorie.

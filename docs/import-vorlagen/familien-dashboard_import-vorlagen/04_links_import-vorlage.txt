@@ -1,0 +1,15 @@
+Links Importvorlage
+
+--- EINTRAG ---
+Sammlung (MUSS):
+Titel (MUSS):
+Adresse (MUSS):
+Beschreibung:
+Als Favorit anzeigen: ja
+
+--- EINTRAG ---
+Sammlung (MUSS):
+Titel (MUSS):
+Adresse (MUSS):
+Beschreibung:
+Als Favorit anzeigen: ja

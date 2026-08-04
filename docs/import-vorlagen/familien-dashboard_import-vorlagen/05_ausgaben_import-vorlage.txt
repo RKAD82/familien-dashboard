@@ -1,0 +1,43 @@
+Ausgaben Importvorlage
+
+--- EINTRAG ---
+Bereich (MUSS):
+Jahr (MUSS):
+Status: aktiv
+Bezeichnung (MUSS):
+Anbieter:
+Betrag EUR:
+Rhythmus:
+Zahlt von:
+Abrechnungsnotiz:
+Naechste Pruefung:
+Vertrag bis:
+Kuendigungsfrist:
+Kontakt:
+Telefon:
+E-Mail:
+Webseite:
+Kundennummer:
+Vergleichslink:
+Notiz:
+
+--- EINTRAG ---
+Bereich (MUSS):
+Jahr (MUSS):
+Status: aktiv
+Bezeichnung (MUSS):
+Anbieter:
+Betrag EUR:
+Rhythmus:
+Zahlt von:
+Abrechnungsnotiz:
+Naechste Pruefung:
+Vertrag bis:
+Kuendigungsfrist:
+Kontakt:
+Telefon:
+E-Mail:
+Webseite:
+Kundennummer:
+Vergleichslink:
+Notiz:

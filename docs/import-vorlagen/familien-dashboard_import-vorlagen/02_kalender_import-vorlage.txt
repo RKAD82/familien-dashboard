@@ -1,0 +1,33 @@
+Kalender Importvorlage
+
+--- EINTRAG ---
+Datum (MUSS):
+Titel (MUSS):
+Start:
+Ende:
+Ganztaegig: nein
+Jede Woche an diesem Wochentag anzeigen: nein
+Kategorie:
+Ort:
+Zustaendig:
+Bringt:
+Holt:
+Notiz:
+Wichtig markieren: nein
+Familie benachrichtigen: nein
+
+--- EINTRAG ---
+Datum (MUSS):
+Titel (MUSS):
+Start:
+Ende:
+Ganztaegig: nein
+Jede Woche an diesem Wochentag anzeigen: nein
+Kategorie:
+Ort:
+Zustaendig:
+Bringt:
+Holt:
+Notiz:
+Wichtig markieren: nein
+Familie benachrichtigen: nein

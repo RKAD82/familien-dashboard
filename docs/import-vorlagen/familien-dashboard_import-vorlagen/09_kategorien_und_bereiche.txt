@@ -1,0 +1,33 @@
+Kategorien und Bereiche in der aktuellen App
+
+Aufgaben:
+Kategorie ist ein freies Eingabefeld.
+Eine neue Kategorie entsteht, indem sie im Feld Kategorie eingetippt wird.
+Es gibt aktuell keine eigene Seite fuer Aufgabenkategorien.
+
+Einkauf:
+Kategorie ist ein freies Eingabefeld pro Artikel.
+Bereich ist die sichtbare Gruppierung innerhalb einer Einkaufsliste.
+Wenn Bereich leer bleibt, gehoert der Artikel zu Einzelne Artikel.
+Es gibt aktuell keine eigene Kategorieverwaltung fuer Einkauf.
+
+Inventar:
+Kategorie ist ein freies Eingabefeld.
+Die Liste der Filter entsteht aus vorhandenen Inventareintraegen.
+
+Ausgaben:
+Bereich ist eine echte eigene Struktur.
+Neue Bereiche koennen auf der Ausgaben-Seite angelegt werden.
+Beispiele: Haushalt, Versicherungen, Abos.
+
+Links:
+Sammlung ist die Gruppe, in der ein Link liegt.
+Neue Sammlungen koennen auf der Links-Seite angelegt werden.
+Beim Import entsteht eine neue Sammlung automatisch, wenn der Name noch nicht vorhanden ist.
+
+Notizen:
+Kategorie ist ein freies Eingabefeld.
+
+Kontakte:
+Es gibt keine Kategorie.
+Das Feld heisst Bezug.

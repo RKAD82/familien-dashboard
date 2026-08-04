@@ -1,0 +1,26 @@
+Einkauf Importvorlage
+
+Neue Einkaufsliste oder Vorlage
+
+--- EINTRAG ---
+Neue Liste/Vorlage (MUSS):
+Typ:
+Als Vorlage speichern: nein
+
+Artikel fuer eine Einkaufsliste
+
+--- EINTRAG ---
+Einkaufsliste (MUSS):
+Artikel (MUSS):
+Menge:
+Einheit:
+Kategorie:
+Bereich:
+
+--- EINTRAG ---
+Einkaufsliste (MUSS):
+Artikel (MUSS):
+Menge:
+Einheit:
+Kategorie:
+Bereich:

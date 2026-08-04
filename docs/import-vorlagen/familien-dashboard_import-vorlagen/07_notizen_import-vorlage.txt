@@ -1,0 +1,17 @@
+Notizen Importvorlage
+
+--- EINTRAG ---
+Titel (MUSS):
+Inhalt (MUSS):
+Kategorie:
+Sichtbarkeit:
+Wichtig markieren: nein
+Familie benachrichtigen: nein
+
+--- EINTRAG ---
+Titel (MUSS):
+Inhalt (MUSS):
+Kategorie:
+Sichtbarkeit:
+Wichtig markieren: nein
+Familie benachrichtigen: nein

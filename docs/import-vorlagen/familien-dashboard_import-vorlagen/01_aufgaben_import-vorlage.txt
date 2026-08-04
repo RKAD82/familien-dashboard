@@ -1,0 +1,19 @@
+Aufgaben Importvorlage
+
+--- EINTRAG ---
+Titel (MUSS):
+Kategorie:
+Beschreibung:
+Faelligkeit:
+Zustaendig:
+Wichtig markieren: nein
+Familie benachrichtigen: nein
+
+--- EINTRAG ---
+Titel (MUSS):
+Kategorie:
+Beschreibung:
+Faelligkeit:
+Zustaendig:
+Wichtig markieren: nein
+Familie benachrichtigen: nein
